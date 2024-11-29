@@ -17,7 +17,6 @@ class Katari_Activity_Monitor {
     public function __construct() {
         // Post related actions
         add_action('transition_post_status', array($this, 'log_post_status_change'), 10, 3);
-        add_action('delete_post', array($this, 'log_post_deletion'));
         add_action('post_updated', array($this, 'log_post_update'), 10, 3);
         
         // Comment related actions
@@ -47,7 +46,9 @@ class Katari_Activity_Monitor {
         // Attachment/Media actions
         add_action('add_attachment', array($this, 'log_media_upload'));
         add_action('edit_attachment', array($this, 'log_media_update'));
-        add_action('delete_attachment', array($this, 'log_media_deletion'));
+        add_action('delete_attachment', array($this, 'log_media_deletion'), 1);
+        add_action('wp_ajax_trash-post', array($this, 'intercept_media_trash'), 1);
+        add_action('wp_ajax_delete-post', array($this, 'intercept_media_permanent_delete'), 1);
         
         // Menu actions
         add_action('wp_update_nav_menu', array($this, 'log_menu_update'));
@@ -69,6 +70,9 @@ class Katari_Activity_Monitor {
         
         // Core WordPress updates
         add_action('_core_updated_successfully', array($this, 'log_wordpress_core_update'));
+
+        // Role management actions
+        add_action('katari_role_cloned', array($this, 'log_role_clone'), 10, 2);
     }
 
     /**
@@ -231,20 +235,109 @@ class Katari_Activity_Monitor {
     }
 
     /**
+     * Log media deletion
+     * 
+     * @param int $post_id Post ID
+     */
+    public function log_media_deletion($post_id) {
+        try {
+            $post = get_post($post_id);
+            
+            // Only proceed if this is an attachment
+            if (!$post || $post->post_type !== 'attachment') {
+                return;
+            }
+
+            $user = wp_get_current_user();
+            
+            // Try to get filename from different sources
+            $file_name = '';
+            
+            // First try to get from attachment metadata
+            $metadata = wp_get_attachment_metadata($post_id);
+            if (!empty($metadata['file'])) {
+                $file_name = basename($metadata['file']);
+                error_log('Found filename from metadata: ' . $file_name);
+            }
+            
+            // If that fails, try to get from _wp_attached_file meta
+            if (empty($file_name)) {
+                $attached_file = get_post_meta($post_id, '_wp_attached_file', true);
+                if (!empty($attached_file)) {
+                    $file_name = basename($attached_file);
+                    error_log('Found filename from _wp_attached_file: ' . $file_name);
+                }
+            }
+            
+            // If that fails, try to get from post title
+            if (empty($file_name)) {
+                $file_name = $post->post_title;
+                error_log('Using post title as filename: ' . $file_name);
+            }
+            
+            // Add a fallback if we still don't have a name
+            if (empty($file_name)) {
+                $file_name = sprintf(__('Media #%d', 'katari-user-role-editor'), $post_id);
+                error_log('Using fallback filename: ' . $file_name);
+            }
+            
+            // Add a fallback if we still don't have a name
+            if (empty($file_name)) {
+                $file_name = sprintf(__('Media #%d', 'katari-user-role-editor'), $post_id);
+                error_log('Using fallback filename: ' . $file_name);
+            }
+
+            error_log('Final filename used: ' . $file_name);
+            error_log('Post data: ' . print_r($post, true));
+            error_log('Metadata: ' . print_r($metadata, true));
+
+            $description = sprintf(
+                /* translators: 1: User display name, 2: File name */
+                __('User %1$s permanently deleted media file "%2$s"', 'katari-user-role-editor'),
+                $user->display_name,
+                $file_name
+            );
+
+            $this->log_activity('media_deletion', $description);
+        } catch (Exception $e) {
+            error_log('Katari User Role Editor - Error in media deletion logging: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Log plugin activation
      */
     public function log_plugin_activation($plugin) {
         $user = wp_get_current_user();
         $plugin_data = get_plugin_data(WP_PLUGIN_DIR . '/' . $plugin);
+        $plugin_name = !empty($plugin_data['Name']) ? $plugin_data['Name'] : $plugin;
 
         $description = sprintf(
             /* translators: 1: User display name, 2: Plugin name */
-            __('User %1$s activated plugin: %2$s', 'katari-user-role-editor'),
+            __('User %1$s activated plugin "%2$s"', 'katari-user-role-editor'),
             $user->display_name,
-            $plugin_data['Name']
+            $plugin_name
         );
 
         $this->log_activity('plugin_activation', $description);
+    }
+
+    /**
+     * Log plugin deactivation
+     */
+    public function log_plugin_deactivation($plugin) {
+        $user = wp_get_current_user();
+        $plugin_data = get_plugin_data(WP_PLUGIN_DIR . '/' . $plugin);
+        $plugin_name = !empty($plugin_data['Name']) ? $plugin_data['Name'] : $plugin;
+
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Plugin name */
+            __('User %1$s deactivated plugin "%2$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $plugin_name
+        );
+
+        $this->log_activity('plugin_deactivation', $description);
     }
 
     /**
@@ -753,18 +846,333 @@ class Katari_Activity_Monitor {
     }
 
     /**
+     * Intercept media deletion AJAX request
+     */
+    public function intercept_media_trash() {
+        if (!isset($_POST['id']) || !isset($_POST['type'])) {
+            return;
+        }
+
+        $post_id = intval($_POST['id']);
+        try {
+            $post = get_post($post_id);
+            if (!$post || $post->post_type !== 'attachment') {
+                return;
+            }
+
+            $user = wp_get_current_user();
+            
+            // Try to get filename from different sources
+            $file_name = '';
+            
+            // First try to get from attachment metadata
+            $metadata = wp_get_attachment_metadata($post_id);
+            if (!empty($metadata['file'])) {
+                $file_name = basename($metadata['file']);
+                error_log('Found filename from metadata: ' . $file_name);
+            }
+            
+            // If that fails, try to get from _wp_attached_file meta
+            if (empty($file_name)) {
+                $attached_file = get_post_meta($post_id, '_wp_attached_file', true);
+                if (!empty($attached_file)) {
+                    $file_name = basename($attached_file);
+                    error_log('Found filename from _wp_attached_file: ' . $file_name);
+                }
+            }
+            
+            // If that fails, try to get from post title
+            if (empty($file_name)) {
+                $file_name = $post->post_title;
+                error_log('Using post title as filename: ' . $file_name);
+            }
+            
+            // Add a fallback if we still don't have a name
+            if (empty($file_name)) {
+                $file_name = sprintf(__('Media #%d', 'katari-user-role-editor'), $post_id);
+                error_log('Using fallback filename: ' . $file_name);
+            }
+
+            error_log('Final filename used: ' . $file_name);
+            error_log('Post data: ' . print_r($post, true));
+            error_log('Metadata: ' . print_r($metadata, true));
+
+            $description = sprintf(
+                /* translators: 1: User display name, 2: File name */
+                __('User %1$s moved media file "%2$s" to trash', 'katari-user-role-editor'),
+                $user->display_name,
+                $file_name
+            );
+
+            $this->log_activity('media_trash', $description);
+        } catch (Exception $e) {
+            error_log('Katari User Role Editor - Error in media trash interception: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Intercept media permanent deletion request
+     */
+    public function intercept_media_permanent_delete() {
+        if (!isset($_POST['id']) || !isset($_POST['type'])) {
+            return;
+        }
+
+        $post_id = intval($_POST['id']);
+        try {
+            $post = get_post($post_id);
+            if (!$post || $post->post_type !== 'attachment') {
+                return;
+            }
+
+            $user = wp_get_current_user();
+            
+            // Try to get filename from different sources
+            $file_name = '';
+            
+            // First try to get from attachment metadata
+            $metadata = wp_get_attachment_metadata($post_id);
+            if (!empty($metadata['file'])) {
+                $file_name = basename($metadata['file']);
+                error_log('Found filename from metadata: ' . $file_name);
+            }
+            
+            // If that fails, try to get from _wp_attached_file meta
+            if (empty($file_name)) {
+                $attached_file = get_post_meta($post_id, '_wp_attached_file', true);
+                if (!empty($attached_file)) {
+                    $file_name = basename($attached_file);
+                    error_log('Found filename from _wp_attached_file: ' . $file_name);
+                }
+            }
+            
+            // If that fails, try to get from post title
+            if (empty($file_name)) {
+                $file_name = $post->post_title;
+                error_log('Using post title as filename: ' . $file_name);
+            }
+            
+            // Add a fallback if we still don't have a name
+            if (empty($file_name)) {
+                $file_name = sprintf(__('Media #%d', 'katari-user-role-editor'), $post_id);
+                error_log('Using fallback filename: ' . $file_name);
+            }
+
+            error_log('Final filename used: ' . $file_name);
+            error_log('Post data: ' . print_r($post, true));
+            error_log('Metadata: ' . print_r($metadata, true));
+
+            $description = sprintf(
+                /* translators: 1: User display name, 2: File name */
+                __('User %1$s permanently deleted media file "%2$s"', 'katari-user-role-editor'),
+                $user->display_name,
+                $file_name
+            );
+
+            $this->log_activity('media_permanent_delete', $description);
+        } catch (Exception $e) {
+            error_log('Katari User Role Editor - Error in media permanent deletion interception: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Log activity to database
+     * 
+     * @param string $action The action being logged
+     * @param string $description Description of the action
+     * @return bool Whether the logging was successful
      */
     private function log_activity($action, $description) {
-        global $wpdb;
-        
-        $data = array(
-            'user_id' => get_current_user_id(),
-            'action' => $action,
-            'description' => $description,
-            'created_at' => current_time('mysql')
+        try {
+            global $wpdb;
+            
+            // Ensure we have valid data
+            if (empty($action) || empty($description)) {
+                return false;
+            }
+            
+            $data = array(
+                'user_id' => get_current_user_id(),
+                'action' => $action,
+                'description' => $description,
+                'created_at' => current_time('mysql')
+            );
+            
+            $result = $wpdb->insert("{$wpdb->prefix}katari_logs", $data);
+            
+            if ($result === false) {
+                error_log('Katari User Role Editor - Error inserting log: ' . $wpdb->last_error);
+                return false;
+            }
+            
+            return true;
+        } catch (Exception $e) {
+            error_log('Katari User Role Editor - Error in log_activity: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Log user profile update
+     * 
+     * @param int $user_id User ID
+     * @param WP_User $old_user_data Object containing user's data prior to update
+     */
+    public function log_profile_update($user_id, $old_user_data) {
+        $user = get_userdata($user_id);
+        $current_user = wp_get_current_user();
+
+        // If the user is updating their own profile
+        if ($user_id === $current_user->ID) {
+            $description = sprintf(
+                /* translators: 1: User display name */
+                __('User %1$s updated their profile', 'katari-user-role-editor'),
+                $user->display_name
+            );
+        } else {
+            $description = sprintf(
+                /* translators: 1: Admin user name, 2: Target user name */
+                __('User %1$s updated profile of %2$s', 'katari-user-role-editor'),
+                $current_user->display_name,
+                $user->display_name
+            );
+        }
+
+        $this->log_activity('profile_update', $description);
+    }
+
+    /**
+     * Log user registration
+     * 
+     * @param int $user_id User ID
+     */
+    public function log_user_registration($user_id) {
+        $user = get_userdata($user_id);
+        $current_user = wp_get_current_user();
+
+        // If this is a user registering themselves
+        if (!$current_user->exists()) {
+            $description = sprintf(
+                /* translators: 1: User display name */
+                __('New user registration: %1$s', 'katari-user-role-editor'),
+                $user->display_name
+            );
+        } else {
+            $description = sprintf(
+                /* translators: 1: Admin user name, 2: New user name */
+                __('User %1$s created new user account: %2$s', 'katari-user-role-editor'),
+                $current_user->display_name,
+                $user->display_name
+            );
+        }
+
+        $this->log_activity('user_registration', $description);
+    }
+
+    /**
+     * Log user deletion
+     * 
+     * @param int $user_id User ID
+     */
+    public function log_user_deletion($user_id) {
+        $deleted_user = get_userdata($user_id);
+        $current_user = wp_get_current_user();
+
+        if ($deleted_user) {
+            $description = sprintf(
+                /* translators: 1: Admin user name, 2: Deleted user name */
+                __('User %1$s deleted user account: %2$s', 'katari-user-role-editor'),
+                $current_user->display_name,
+                $deleted_user->display_name
+            );
+
+            $this->log_activity('user_deletion', $description);
+        }
+    }
+
+    /**
+     * Log comment creation
+     * 
+     * @param int $comment_id Comment ID
+     * @param object $comment Comment object
+     */
+    public function log_comment_creation($comment_id, $comment) {
+        $user = wp_get_current_user();
+        $post = get_post($comment->comment_post_ID);
+
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Post title */
+            __('User %1$s commented on "%2$s"', 'katari-user-role-editor'),
+            $user->exists() ? $user->display_name : $comment->comment_author,
+            $post->post_title
         );
+
+        $this->log_activity('comment_creation', $description);
+    }
+
+    /**
+     * Log menu creation
+     * 
+     * @param int $menu_id Menu ID
+     */
+    public function log_menu_creation($menu_id) {
+        $user = wp_get_current_user();
+        $menu = wp_get_nav_menu_object($menu_id);
+
+        if ($menu) {
+            $description = sprintf(
+                /* translators: 1: User display name, 2: Menu name */
+                __('User %1$s created new menu: %2$s', 'katari-user-role-editor'),
+                $user->display_name,
+                $menu->name
+            );
+
+            $this->log_activity('menu_creation', $description);
+        }
+    }
+
+    /**
+     * Log menu update
+     * 
+     * @param int $menu_id Menu ID
+     */
+    public function log_menu_update($menu_id) {
+        $user = wp_get_current_user();
+        $menu = wp_get_nav_menu_object($menu_id);
+
+        if ($menu) {
+            $description = sprintf(
+                /* translators: 1: User display name, 2: Menu name */
+                __('User %1$s updated menu: %2$s', 'katari-user-role-editor'),
+                $user->display_name,
+                $menu->name
+            );
+
+            $this->log_activity('menu_update', $description);
+        }
+    }
+
+    /**
+     * Log role cloning
+     * 
+     * @param string $source_role The source role that was cloned
+     * @param string $new_role_name The name of the newly created role
+     */
+    public function log_role_clone($source_role, $new_role_name) {
+        $user = wp_get_current_user();
+        $wp_roles = wp_roles();
         
-        $wpdb->insert("{$wpdb->prefix}katari_logs", $data);
+        $source_display_name = isset($wp_roles->role_names[$source_role]) ? $wp_roles->role_names[$source_role] : $source_role;
+        $new_display_name = isset($wp_roles->role_names[$new_role_name]) ? $wp_roles->role_names[$new_role_name] : $new_role_name;
+
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Source role display name, 3: New role display name */
+            __('User %1$s cloned role "%2$s" to create "%3$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $source_display_name,
+            $new_display_name
+        );
+
+        $this->log_activity('role_clone', $description);
     }
 }
