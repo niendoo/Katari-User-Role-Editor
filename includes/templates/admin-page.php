@@ -114,6 +114,12 @@ $capability_groups = array(
             <button class="button" onclick="document.getElementById('katari-new-role-form').style.display='block'">
                 <?php esc_html_e('Add New Role', 'katari-user-role-editor'); ?>
             </button>
+            <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=katari-role-editor')); ?>" style="display:inline-block; margin-left: 10px;">
+                <?php wp_nonce_field('katari_restore_roles'); ?>
+                <button type="submit" name="katari_restore_roles" class="button" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to restore default WordPress roles? This will remove all custom roles and reset default role capabilities. Users of custom roles will be assigned to Subscriber role.', 'katari-user-role-editor')); ?>');">
+                    <?php esc_html_e('Restore Default Roles', 'katari-user-role-editor'); ?>
+                </button>
+            </form>
         </div>
     </div>
 
@@ -194,23 +200,48 @@ $capability_groups = array(
                 </tr>
                 <tr id="capabilities-<?php echo esc_attr($role); ?>" style="display:none">
                     <td colspan="4" class="katari-capabilities-container">
+                        <div class="katari-capabilities-header">
+                            <input type="text" id="capability-search-<?php echo esc_attr($role); ?>" 
+                                   class="katari-capability-search" 
+                                   placeholder="<?php esc_attr_e('Search capabilities...', 'katari-user-role-editor'); ?>"
+                                   onkeyup="searchCapabilities('<?php echo esc_js($role); ?>')">
+                        </div>
+
                         <form method="post" action="">
                             <?php wp_nonce_field('katari_update_role'); ?>
                             <input type="hidden" name="role_name" value="<?php echo esc_attr($role); ?>">
                             
                             <?php foreach ($capability_groups as $group_key => $group): ?>
-                                <div class="katari-capability-group">
-                                    <h4><?php echo esc_html($group['title']); ?></h4>
+                                <div class="katari-capability-group" id="group-<?php echo esc_attr($group_key); ?>-<?php echo esc_attr($role); ?>">
+                                    <div class="katari-group-header">
+                                        <h4><?php echo esc_html($group['title']); ?></h4>
+                                        <label class="katari-select-all">
+                                            <input type="checkbox" 
+                                                   class="katari-select-all-checkbox" 
+                                                   data-group="<?php echo esc_attr($group_key); ?>"
+                                                   data-role="<?php echo esc_attr($role); ?>"
+                                                   onclick="toggleGroupCapabilities(this)">
+                                            <?php esc_html_e('Select All', 'katari-user-role-editor'); ?>
+                                        </label>
+                                    </div>
                                     <p class="description"><?php echo esc_html($group['description']); ?></p>
                                     <div class="katari-capabilities-grid">
-                                        <?php foreach ($group['capabilities'] as $cap): ?>
-                                            <div class="katari-capability-checkbox">
+                                        <?php foreach ($group['capabilities'] as $capability): ?>
+                                            <?php $checked = isset($role_obj->capabilities[$capability]) ? 'checked' : ''; ?>
+                                            <?php $description = $capabilities_manager->get_capability_description($capability); ?>
+                                            <?php $id = esc_attr($role . '_' . $capability); ?>
+                                            <div class="katari-capability-item" data-group="<?php echo esc_attr($group_key); ?>">
                                                 <input type="checkbox" 
-                                                       id="<?php echo esc_attr($role . '_' . $cap); ?>"
+                                                       id="<?php echo $id; ?>"
                                                        name="capabilities[]" 
-                                                       value="<?php echo esc_attr($cap); ?>"
-                                                       <?php checked(isset($role_obj->capabilities[$cap]) && $role_obj->capabilities[$cap]); ?>>
-                                                <span><?php echo esc_html($cap); ?></span>
+                                                       value="<?php echo esc_attr($capability); ?>" 
+                                                       <?php echo $checked; ?>>
+                                                <div class="katari-content">
+                                                    <label for="<?php echo $id; ?>" class="capability-name"><?php echo esc_html($capability); ?></label>
+                                                    <?php if ($description) : ?>
+                                                        <div class="capability-description"><?php echo esc_html($description); ?></div>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -222,18 +253,36 @@ $capability_groups = array(
                             $other_caps = array_diff($all_capabilities, array_merge(...array_column($capability_groups, 'capabilities')));
                             if (!empty($other_caps)):
                             ?>
-                                <div class="katari-capability-group">
-                                    <h4>Other Capabilities</h4>
-                                    <p class="description">Additional capabilities not in predefined groups</p>
+                                <div class="katari-capability-group" id="group-other-<?php echo esc_attr($role); ?>">
+                                    <div class="katari-group-header">
+                                        <h4><?php esc_html_e('Other Capabilities', 'katari-user-role-editor'); ?></h4>
+                                        <label class="katari-select-all">
+                                            <input type="checkbox" 
+                                                   class="katari-select-all-checkbox" 
+                                                   data-group="other"
+                                                   data-role="<?php echo esc_attr($role); ?>"
+                                                   onclick="toggleGroupCapabilities(this)">
+                                            <?php esc_html_e('Select All', 'katari-user-role-editor'); ?>
+                                        </label>
+                                    </div>
+                                    <p class="description"><?php esc_html_e('Additional capabilities not in predefined groups', 'katari-user-role-editor'); ?></p>
                                     <div class="katari-capabilities-grid">
-                                        <?php foreach ($other_caps as $cap): ?>
-                                            <div class="katari-capability-checkbox">
+                                        <?php foreach ($other_caps as $capability): ?>
+                                            <?php $checked = isset($role_obj->capabilities[$capability]) ? 'checked' : ''; ?>
+                                            <?php $description = $capabilities_manager->get_capability_description($capability); ?>
+                                            <?php $id = esc_attr($role . '_' . $capability); ?>
+                                            <div class="katari-capability-item" data-group="other">
                                                 <input type="checkbox" 
-                                                       id="<?php echo esc_attr($role . '_' . $cap); ?>"
+                                                       id="<?php echo $id; ?>"
                                                        name="capabilities[]" 
-                                                       value="<?php echo esc_attr($cap); ?>"
-                                                       <?php checked(isset($role_obj->capabilities[$cap])); ?>>
-                                                <span><?php echo esc_html($cap); ?></span>
+                                                       value="<?php echo esc_attr($capability); ?>" 
+                                                       <?php echo $checked; ?>>
+                                                <div class="katari-content">
+                                                    <label for="<?php echo $id; ?>" class="capability-name"><?php echo esc_html($capability); ?></label>
+                                                    <?php if ($description) : ?>
+                                                        <div class="capability-description"><?php echo esc_html($description); ?></div>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -256,6 +305,44 @@ function toggleCapabilities(role) {
     var row = document.getElementById('capabilities-' + role);
     if (row) {
         row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+    }
+}
+
+function searchCapabilities(role) {
+    var searchInput = document.getElementById('capability-search-' + role);
+    var searchValue = searchInput.value.toLowerCase();
+    var capabilityGroups = document.querySelectorAll('[id^="group-"][id$="-' + role + '"]');
+    
+    capabilityGroups.forEach(function(group) {
+        var capabilities = group.querySelectorAll('.katari-capability-item');
+        var visibleCount = 0;
+        
+        capabilities.forEach(function(capability) {
+            var capName = capability.querySelector('.capability-name').textContent.toLowerCase();
+            if (capName.includes(searchValue)) {
+                capability.style.display = '';
+                visibleCount++;
+            } else {
+                capability.style.display = 'none';
+            }
+        });
+        
+        // Show/hide the entire group based on whether it has visible capabilities
+        group.style.display = visibleCount > 0 ? '' : 'none';
+    });
+}
+
+function toggleGroupCapabilities(checkbox) {
+    var group = checkbox.dataset.group;
+    var role = checkbox.dataset.role;
+    var groupElement = document.getElementById('group-' + group + '-' + role);
+    if (groupElement) {
+        var capabilities = groupElement.querySelectorAll('.katari-capability-item');
+        capabilities.forEach(function(capability) {
+            if (capability.style.display !== 'none') {
+                capability.querySelector('input[type="checkbox"]').checked = checkbox.checked;
+            }
+        });
     }
 }
 </script>
@@ -281,13 +368,18 @@ function toggleCapabilities(role) {
     margin-top: 10px;
 }
 
-.katari-capability-checkbox {
+.katari-capability-item {
     display: flex;
     align-items: center;
     padding: 5px;
 }
 
-.katari-capability-checkbox input[type="checkbox"] {
+.katari-content {
+    flex: 1;
+    margin-left: 10px;
+}
+
+.katari-capability-item input[type="checkbox"] {
     margin-right: 8px;
 }
 
@@ -295,5 +387,34 @@ function toggleCapabilities(role) {
     color: #646970;
     font-style: italic;
     margin: 5px 0 15px;
+}
+
+.katari-capabilities-header {
+    padding: 10px;
+    background: #f7f7f7;
+    border-bottom: 1px solid #e2e4e7;
+}
+
+.katari-capability-search {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #e2e4e7;
+}
+
+.katari-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #e2e4e7;
+}
+
+.katari-select-all {
+    margin-left: 10px;
+}
+
+.katari-select-all-checkbox {
+    margin-right: 5px;
 }
 </style>

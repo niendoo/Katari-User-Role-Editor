@@ -158,14 +158,132 @@
 /* Capabilities Grid */
 .katari-capabilities-grid {
     display: grid;
-    gap: 8px;
-    margin-top: 10px;
-    width: 100%;
-    box-sizing: border-box;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+    padding: 5px;
 }
 
-/* Responsive grid adjustments */
+.katari-capability-item {
+    background: #f8f9fa;
+    border: 1px solid #e2e4e7;
+    border-radius: 4px;
+    padding: 12px;
+    position: relative;
+    min-height: 24px;
+    transition: all 0.2s ease;
+}
+
+.katari-capability-item:hover {
+    background: #fff;
+    border-color: #2271b1;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.katari-capability-item input[type="checkbox"] {
+    position: absolute;
+    left: 12px;
+    top: 14px;
+    margin: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.katari-content {
+    margin-left: 45px;
+    display: block;
+    width: calc(100% - 50px);
+}
+
+.capability-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1d2327;
+    margin-bottom: 6px;
+    cursor: pointer;
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.capability-description {
+    font-size: 12px;
+    color: #646970;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 782px) {
+    .katari-capabilities-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 3px;
+    }
+
+    .katari-capability-item {
+        padding: 14px;
+        min-height: 28px;
+    }
+
+    .katari-capability-item input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        top: 16px;
+        left: 14px;
+    }
+
+    .katari-content {
+        margin-left: 50px;
+        width: calc(100% - 55px);
+    }
+
+    .capability-name {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .capability-description {
+        font-size: 13px;
+    }
+}
+
+@media screen and (max-width: 782px) {
+    .katari-wrap {
+        margin: 10px;
+    }
+
+    .katari-capabilities-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .katari-capability-item {
+        padding: 12px;
+    }
+
+    .katari-checkbox-col {
+        width: 24px;
+        flex: 0 0 24px;
+    }
+
+    .katari-checkbox-col input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+    }
+
+    .katari-content-col {
+        padding-left: 12px;
+    }
+
+    .capability-name {
+        font-size: 14px;
+    }
+
+    .capability-description {
+        font-size: 13px;
+    }
+}
+
 @media screen and (min-width: 480px) {
     .katari-capabilities-grid {
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -192,32 +310,83 @@
 
 /* Capability Checkbox */
 .katari-capability-checkbox {
+    background: #f8f9fa;
+    border: 1px solid #e2e4e7;
+    border-radius: 4px;
+    transition: all 0.2s;
     display: flex;
     align-items: flex-start;
-    padding: 8px;
-    background: #fff;
-    border: 1px solid #e2e4e7;
-    border-radius: 3px;
-    transition: background-color 0.2s;
 }
 
 .katari-capability-checkbox:hover {
-    background: #f0f0f1;
+    background: #fff;
+    border-color: #2271b1;
 }
 
-.katari-capability-checkbox input[type="checkbox"] {
-    margin: 3px 8px 0 0;
+.katari-checkbox-wrapper {
+    padding: 10px 0 10px 10px;
     flex-shrink: 0;
 }
 
-.katari-capability-checkbox span {
-    font-size: 13px;
-    line-height: 1.4;
-    color: #50575e;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    hyphens: auto;
+.katari-label-wrapper {
     flex: 1;
+    padding: 8px 10px 8px 0;
+    min-width: 0;
+}
+
+.katari-capability-checkbox input[type="checkbox"] {
+    margin: 2px 0 0 0;
+}
+
+.katari-capability-checkbox label {
+    display: block;
+    cursor: pointer;
+}
+
+.capability-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1d2327;
+    margin: 0 0 4px;
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.capability-description {
+    font-size: 12px;
+    color: #646970;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 782px) {
+    .katari-capabilities-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .katari-checkbox-wrapper {
+        padding: 12px 0 12px 10px;
+    }
+
+    .katari-label-wrapper {
+        padding: 10px 10px 10px 0;
+    }
+
+    .katari-capability-checkbox input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-top: 3px;
+    }
+
+    .capability-name {
+        font-size: 14px;
+    }
+
+    .capability-description {
+        font-size: 13px;
+    }
 }
 
 /* Description */
@@ -1241,4 +1410,184 @@
 .katari-activity-time {
     color: #666;
     font-size: 12px;
+}
+
+/* Capability Management */
+.katari-capabilities-container {
+    background: #fff;
+    border: 1px solid #e2e4e7;
+    margin: 0;
+    padding: 0;
+}
+
+.katari-capabilities-header {
+    padding: 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e2e4e7;
+}
+
+.katari-capability-search {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #e2e4e7;
+    border-radius: 4px;
+    transition: border-color 0.2s;
+}
+
+.katari-capability-search:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+.katari-capability-group {
+    margin: 0;
+    padding: 15px;
+    border-bottom: 1px solid #e2e4e7;
+}
+
+.katari-capability-group:last-child {
+    border-bottom: none;
+}
+
+.katari-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.katari-group-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.katari-select-all {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    color: #50575e;
+    margin: 0;
+}
+
+.katari-select-all input[type="checkbox"] {
+    margin: 0 5px 0 0;
+}
+
+.katari-capabilities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+    padding: 5px;
+}
+
+.katari-capability-checkbox {
+    position: relative;
+    background: #f8f9fa;
+    border: 1px solid #e2e4e7;
+    border-radius: 4px;
+    transition: all 0.2s;
+    padding: 8px 12px 8px 35px;
+}
+
+.katari-capability-checkbox:hover {
+    background: #fff;
+    border-color: #2271b1;
+}
+
+.katari-capability-checkbox input[type="checkbox"] {
+    position: absolute;
+    left: 12px;
+    top: 11px;
+    margin: 0;
+}
+
+.katari-capability-checkbox label {
+    display: block;
+    cursor: pointer;
+    margin: 0;
+}
+
+.capability-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1d2327;
+    margin: 0 0 4px;
+    word-break: break-word;
+}
+
+.capability-description {
+    display: block;
+    font-size: 12px;
+    color: #646970;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.description {
+    color: #646970;
+    font-style: italic;
+    margin: 5px 0 15px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* Submit Button */
+.submit-button {
+    margin: 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-top: 1px solid #e2e4e7;
+    text-align: right;
+}
+
+.button-primary {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+    text-decoration: none;
+    text-shadow: none;
+    padding: 0 12px;
+    min-height: 32px;
+    line-height: 2.30769231;
+    font-size: 13px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.button-primary:hover {
+    background: #135e96;
+    border-color: #135e96;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 782px) {
+    .katari-capabilities-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .katari-capability-checkbox {
+        padding: 10px 12px 10px 40px;
+    }
+
+    .katari-capability-checkbox input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        top: 13px;
+        left: 10px;
+    }
+
+    .capability-name {
+        font-size: 14px;
+    }
+
+    .capability-description {
+        font-size: 13px;
+    }
 }

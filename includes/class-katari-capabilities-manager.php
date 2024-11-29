@@ -72,6 +72,11 @@ class Katari_Capabilities_Manager {
         if (isset($_POST['katari_add_role']) && isset($_POST['_wpnonce'])) {
             $this->add_role();
         }
+
+        // Handle restore default roles
+        if (isset($_POST['katari_restore_roles']) && isset($_POST['_wpnonce'])) {
+            $this->restore_default_roles();
+        }
     }
 
     /**
@@ -131,7 +136,7 @@ class Katari_Capabilities_Manager {
         // Redirect with success message
         wp_safe_redirect(add_query_arg(
             array(
-                'page' => 'katari-user-role-editor',
+                'page' => 'katari-role-editor',
                 'message' => 'role_updated'
             ),
             admin_url('admin.php')
@@ -174,7 +179,7 @@ class Katari_Capabilities_Manager {
         // Redirect with success message
         wp_safe_redirect(add_query_arg(
             array(
-                'page' => 'katari-user-role-editor',
+                'page' => 'katari-role-editor',
                 'message' => 'role_deleted'
             ),
             admin_url('admin.php')
@@ -214,8 +219,111 @@ class Katari_Capabilities_Manager {
         // Redirect with success message
         wp_safe_redirect(add_query_arg(
             array(
-                'page' => 'katari-user-role-editor',
+                'page' => 'katari-role-editor',
                 'message' => 'role_added'
+            ),
+            admin_url('admin.php')
+        ));
+        exit;
+    }
+
+    /**
+     * Restore WordPress default roles and capabilities.
+     */
+    private function restore_default_roles() {
+        // Verify nonce
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'katari_restore_roles')) {
+            wp_die(__('Security check failed.', 'katari-user-role-editor'));
+        }
+
+        // Check permissions
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Sorry, you are not allowed to restore default roles. This action requires manage_options capability.', 'katari-user-role-editor'));
+        }
+
+        global $wp_roles;
+
+        if (!isset($wp_roles)) {
+            $wp_roles = new WP_Roles();
+        }
+
+        // Get all current roles except administrator
+        $existing_roles = array_keys($wp_roles->roles);
+        foreach ($existing_roles as $role) {
+            if ($role !== 'administrator') {
+                remove_role($role);
+            }
+        }
+
+        // Restore default roles with their capabilities
+        add_role('editor', __('Editor'), array(
+            'moderate_comments' => true,
+            'manage_categories' => true,
+            'manage_links' => true,
+            'upload_files' => true,
+            'unfiltered_html' => true,
+            'edit_posts' => true,
+            'edit_others_posts' => true,
+            'edit_published_posts' => true,
+            'publish_posts' => true,
+            'edit_pages' => true,
+            'read' => true,
+            'level_7' => true,
+            'level_6' => true,
+            'level_5' => true,
+            'level_4' => true,
+            'level_3' => true,
+            'level_2' => true,
+            'level_1' => true,
+            'level_0' => true,
+            'edit_others_pages' => true,
+            'edit_published_pages' => true,
+            'publish_pages' => true,
+            'delete_pages' => true,
+            'delete_others_pages' => true,
+            'delete_published_pages' => true,
+            'delete_posts' => true,
+            'delete_others_posts' => true,
+            'delete_published_posts' => true,
+            'delete_private_posts' => true,
+            'edit_private_posts' => true,
+            'read_private_posts' => true,
+            'delete_private_pages' => true,
+            'edit_private_pages' => true,
+            'read_private_pages' => true
+        ));
+
+        add_role('author', __('Author'), array(
+            'upload_files' => true,
+            'edit_posts' => true,
+            'edit_published_posts' => true,
+            'publish_posts' => true,
+            'read' => true,
+            'level_2' => true,
+            'level_1' => true,
+            'level_0' => true,
+            'delete_posts' => true,
+            'delete_published_posts' => true
+        ));
+
+        add_role('contributor', __('Contributor'), array(
+            'edit_posts' => true,
+            'read' => true,
+            'level_1' => true,
+            'level_0' => true,
+            'delete_posts' => true
+        ));
+
+        add_role('subscriber', __('Subscriber'), array(
+            'read' => true,
+            'level_0' => true
+        ));
+
+        // Redirect with success message
+        wp_safe_redirect(add_query_arg(
+            array(
+                'page' => 'katari-role-editor',
+                'message' => 'roles_restored'
             ),
             admin_url('admin.php')
         ));
@@ -226,7 +334,7 @@ class Katari_Capabilities_Manager {
      * Show admin notices.
      */
     public function show_admin_notices() {
-        if (!isset($_GET['page']) || $_GET['page'] !== 'katari-user-role-editor') {
+        if (!isset($_GET['page']) || $_GET['page'] !== 'katari-role-editor') {
             return;
         }
 
@@ -243,6 +351,9 @@ class Katari_Capabilities_Manager {
                 break;
             case 'role_added':
                 $notice_message = __('New role created successfully.', 'katari-user-role-editor');
+                break;
+            case 'roles_restored':
+                $notice_message = __('Default WordPress roles have been restored successfully.', 'katari-user-role-editor');
                 break;
         }
 
@@ -369,5 +480,80 @@ class Katari_Capabilities_Manager {
         sort($capabilities);
 
         return $capabilities;
+    }
+
+    /**
+     * Get description for a capability.
+     *
+     * @param string $capability The capability to get description for.
+     * @return string The capability description.
+     */
+    public function get_capability_description($capability) {
+        $descriptions = array(
+            // Basic capabilities
+            'read' => __('Access to read/view content on the site', 'katari-user-role-editor'),
+            'level_0' => __('Basic user level', 'katari-user-role-editor'),
+            
+            // Post capabilities
+            'edit_posts' => __('Create and edit own posts', 'katari-user-role-editor'),
+            'edit_others_posts' => __('Edit posts created by other users', 'katari-user-role-editor'),
+            'edit_published_posts' => __('Edit already published posts', 'katari-user-role-editor'),
+            'publish_posts' => __('Publish posts', 'katari-user-role-editor'),
+            'delete_posts' => __('Delete own posts', 'katari-user-role-editor'),
+            'delete_others_posts' => __('Delete posts created by other users', 'katari-user-role-editor'),
+            'delete_published_posts' => __('Delete published posts', 'katari-user-role-editor'),
+            'delete_private_posts' => __('Delete private posts', 'katari-user-role-editor'),
+            'read_private_posts' => __('Read private posts', 'katari-user-role-editor'),
+            'edit_private_posts' => __('Edit private posts', 'katari-user-role-editor'),
+            
+            // Page capabilities
+            'edit_pages' => __('Create and edit own pages', 'katari-user-role-editor'),
+            'edit_others_pages' => __('Edit pages created by other users', 'katari-user-role-editor'),
+            'edit_published_pages' => __('Edit already published pages', 'katari-user-role-editor'),
+            'publish_pages' => __('Publish pages', 'katari-user-role-editor'),
+            'delete_pages' => __('Delete own pages', 'katari-user-role-editor'),
+            'delete_others_pages' => __('Delete pages created by other users', 'katari-user-role-editor'),
+            'delete_published_pages' => __('Delete published pages', 'katari-user-role-editor'),
+            'delete_private_pages' => __('Delete private pages', 'katari-user-role-editor'),
+            'read_private_pages' => __('Read private pages', 'katari-user-role-editor'),
+            'edit_private_pages' => __('Edit private pages', 'katari-user-role-editor'),
+            
+            // Theme capabilities
+            'switch_themes' => __('Switch between different themes', 'katari-user-role-editor'),
+            'edit_theme_options' => __('Edit theme options and customize appearance', 'katari-user-role-editor'),
+            'install_themes' => __('Install new themes', 'katari-user-role-editor'),
+            'update_themes' => __('Update existing themes', 'katari-user-role-editor'),
+            'delete_themes' => __('Delete themes', 'katari-user-role-editor'),
+            
+            // Plugin capabilities
+            'activate_plugins' => __('Activate and deactivate plugins', 'katari-user-role-editor'),
+            'install_plugins' => __('Install new plugins', 'katari-user-role-editor'),
+            'update_plugins' => __('Update existing plugins', 'katari-user-role-editor'),
+            'delete_plugins' => __('Delete plugins', 'katari-user-role-editor'),
+            'edit_plugins' => __('Edit plugin files', 'katari-user-role-editor'),
+            
+            // User capabilities
+            'list_users' => __('View list of users', 'katari-user-role-editor'),
+            'create_users' => __('Create new users', 'katari-user-role-editor'),
+            'edit_users' => __('Edit existing users', 'katari-user-role-editor'),
+            'delete_users' => __('Delete users', 'katari-user-role-editor'),
+            'promote_users' => __('Promote users and change their roles', 'katari-user-role-editor'),
+            
+            // Core capabilities
+            'manage_options' => __('Manage site options and settings', 'katari-user-role-editor'),
+            'moderate_comments' => __('Moderate and manage comments', 'katari-user-role-editor'),
+            'manage_categories' => __('Manage post categories', 'katari-user-role-editor'),
+            'manage_links' => __('Manage navigation links', 'katari-user-role-editor'),
+            'upload_files' => __('Upload files to the media library', 'katari-user-role-editor'),
+            'import' => __('Import content from other sources', 'katari-user-role-editor'),
+            'export' => __('Export site content', 'katari-user-role-editor'),
+            'unfiltered_html' => __('Edit content with unrestricted HTML', 'katari-user-role-editor'),
+            'edit_dashboard' => __('Edit dashboard appearance and widgets', 'katari-user-role-editor'),
+            'update_core' => __('Update WordPress core', 'katari-user-role-editor'),
+            'install_languages' => __('Install new language translations', 'katari-user-role-editor'),
+            'update_languages' => __('Update language translations', 'katari-user-role-editor')
+        );
+
+        return isset($descriptions[$capability]) ? $descriptions[$capability] : __('No description available', 'katari-user-role-editor');
     }
 }
