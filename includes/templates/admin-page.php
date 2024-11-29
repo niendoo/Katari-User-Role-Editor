@@ -111,9 +111,12 @@ $capability_groups = array(
 
     <div class="katari-header">
         <div class="katari-actions">
-            <button class="button" onclick="document.getElementById('katari-new-role-form').style.display='block'">
-                <?php esc_html_e('Add New Role', 'katari-user-role-editor'); ?>
-            </button>
+            <form method="post" action="" style="display:inline;">
+                <?php wp_nonce_field('katari_add_role'); ?>
+                <button type="button" class="button" onclick="toggleAddRoleForm()">
+                    <?php esc_html_e('Add New Role', 'katari-user-role-editor'); ?>
+                </button>
+            </form>
             <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=katari-role-editor')); ?>" style="display:inline-block; margin-left: 10px;">
                 <?php wp_nonce_field('katari_restore_roles'); ?>
                 <button type="submit" name="katari_restore_roles" class="button" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to restore default WordPress roles? This will remove all custom roles and reset default role capabilities. Users of custom roles will be assigned to Subscriber role.', 'katari-user-role-editor')); ?>');">
@@ -123,23 +126,34 @@ $capability_groups = array(
         </div>
     </div>
 
-    <!-- New Role Form -->
-    <div id="katari-new-role-form" style="display:none" class="katari-modal">
+    <!-- Add New Role Form -->
+    <div id="katari-add-role-form" style="display:none" class="katari-form-container">
         <form method="post" action="">
             <?php wp_nonce_field('katari_add_role'); ?>
-            <h3><?php esc_html_e('Add New Role', 'katari-user-role-editor'); ?></h3>
-            <p>
-                <label for="role_name"><?php esc_html_e('Role Name:', 'katari-user-role-editor'); ?></label>
-                <input type="text" name="role_name" id="role_name" required pattern="[a-z0-9_-]+" title="<?php esc_attr_e('Only lowercase letters, numbers, - and _ allowed', 'katari-user-role-editor'); ?>">
-                <span class="description"><?php esc_html_e('Lowercase letters, numbers, - and _ only', 'katari-user-role-editor'); ?></span>
-            </p>
-            <p>
-                <label for="role_display_name"><?php esc_html_e('Display Name:', 'katari-user-role-editor'); ?></label>
-                <input type="text" name="role_display_name" id="role_display_name" required>
-            </p>
-            <p>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">
+                        <label for="role_name"><?php esc_html_e('Role Name:', 'katari-user-role-editor'); ?></label>
+                    </th>
+                    <td>
+                        <input type="text" name="role_name" id="role_name" class="regular-text" required 
+                               pattern="[a-z0-9_-]+" 
+                               title="<?php esc_attr_e('Only lowercase letters, numbers, - and _ allowed', 'katari-user-role-editor'); ?>">
+                        <p class="description"><?php esc_html_e('Lowercase letters, numbers, - and _ only', 'katari-user-role-editor'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="role_display_name"><?php esc_html_e('Display Name:', 'katari-user-role-editor'); ?></label>
+                    </th>
+                    <td>
+                        <input type="text" name="role_display_name" id="role_display_name" class="regular-text" required>
+                    </td>
+                </tr>
+            </table>
+            <p class="submit">
                 <input type="submit" name="katari_add_role" class="button button-primary" value="<?php esc_attr_e('Add Role', 'katari-user-role-editor'); ?>">
-                <button type="button" class="button" onclick="this.parentElement.parentElement.style.display='none'"><?php esc_html_e('Cancel', 'katari-user-role-editor'); ?></button>
+                <button type="button" class="button" onclick="toggleAddRoleForm()"><?php esc_html_e('Cancel', 'katari-user-role-editor'); ?></button>
             </p>
         </form>
     </div>
@@ -148,54 +162,54 @@ $capability_groups = array(
     <table class="wp-list-table widefat fixed striped katari-table">
         <thead>
             <tr>
-                <th><?php esc_html_e('Role', 'katari-user-role-editor'); ?></th>
-                <th><?php esc_html_e('Users', 'katari-user-role-editor'); ?></th>
-                <th><?php esc_html_e('Capabilities', 'katari-user-role-editor'); ?></th>
-                <th><?php esc_html_e('Actions', 'katari-user-role-editor'); ?></th>
+                <th scope="col" class="manage-column column-name column-primary"><?php _e('Role', 'katari-user-role-editor'); ?></th>
+                <th scope="col" class="manage-column column-users"><?php _e('Users', 'katari-user-role-editor'); ?></th>
+                <th scope="col" class="manage-column column-capabilities"><?php _e('Capabilities', 'katari-user-role-editor'); ?></th>
+                <th scope="col" class="manage-column column-actions"><?php _e('Actions', 'katari-user-role-editor'); ?></th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($roles->role_names as $role => $name) : ?>
                 <?php $role_obj = get_role($role); ?>
                 <tr>
-                    <td>
+                    <td class="column-name">
                         <strong><?php echo esc_html($name); ?></strong>
-                        <br>
-                        <small><?php echo esc_html($role); ?></small>
+                        <div class="row-actions">
+                            <span class="edit">
+                                <a href="#" onclick="toggleCapabilities('<?php echo esc_attr($role); ?>'); return false;">
+                                    <?php _e('Edit', 'katari-user-role-editor'); ?>
+                                </a> | 
+                            </span>
+                            <span class="clone">
+                                <a href="#" class="katari-clone-role" data-role="<?php echo esc_attr($role); ?>" data-name="<?php echo esc_attr($name); ?>">
+                                    <?php _e('Clone', 'katari-user-role-editor'); ?>
+                                </a>
+                                <?php if ($role !== 'administrator'): ?> | <?php endif; ?>
+                            </span>
+                            <?php if ($role !== 'administrator'): ?>
+                                <span class="delete">
+                                    <form method="post" action="" style="display:inline;">
+                                        <?php wp_nonce_field('katari_delete_role'); ?>
+                                        <input type="hidden" name="role_name" value="<?php echo esc_attr($role); ?>">
+                                        <button type="submit" name="katari_delete_role" class="button-link delete-role" 
+                                            onclick="return confirm('<?php echo esc_js(__('Are you sure you want to delete this role? Users will be assigned to the default role.', 'katari-user-role-editor')); ?>');">
+                                            <?php _e('Delete', 'katari-user-role-editor'); ?>
+                                        </button>
+                                    </form>
+                                </span>
+                            <?php endif; ?>
+                        </div>
                     </td>
-                    <td>
-                        <?php
-                        $user_count = count(get_users(array('role' => $role)));
-                        echo esc_html($user_count);
-                        ?>
+                    <td class="column-users">
+                        <?php echo count(get_users(['role' => $role])); ?>
                     </td>
-                    <td>
-                        <?php
-                        if (!empty($role_obj->capabilities)) {
-                            $cap_count = count($role_obj->capabilities);
-                            printf(
-                                /* translators: %d: number of capabilities */
-                                esc_html(_n('%d capability', '%d capabilities', $cap_count, 'katari-user-role-editor')),
-                                $cap_count
-                            );
-                        } else {
-                            esc_html_e('No capabilities', 'katari-user-role-editor');
-                        }
-                        ?>
+                    <td class="column-capabilities">
+                        <?php echo count($role_obj->capabilities); ?>
                     </td>
-                    <td>
+                    <td class="column-actions">
                         <button class="button" onclick="toggleCapabilities('<?php echo esc_attr($role); ?>')">
-                            <?php esc_html_e('Edit Capabilities', 'katari-user-role-editor'); ?>
+                            <?php _e('Edit Capabilities', 'katari-user-role-editor'); ?>
                         </button>
-                        <?php if ($role !== 'administrator') : ?>
-                            <form method="post" action="" style="display:inline-block;">
-                                <?php wp_nonce_field('katari_delete_role'); ?>
-                                <input type="hidden" name="role_name" value="<?php echo esc_attr($role); ?>">
-                                <button type="submit" name="katari_delete_role" class="button" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to delete this role? Users will be assigned to Subscriber role.', 'katari-user-role-editor')); ?>');">
-                                    <?php esc_html_e('Delete', 'katari-user-role-editor'); ?>
-                                </button>
-                            </form>
-                        <?php endif; ?>
                     </td>
                 </tr>
                 <tr id="capabilities-<?php echo esc_attr($role); ?>" style="display:none">
@@ -298,123 +312,209 @@ $capability_groups = array(
             <?php endforeach; ?>
         </tbody>
     </table>
-</div>
 
-<script>
-function toggleCapabilities(role) {
-    var row = document.getElementById('capabilities-' + role);
-    if (row) {
-        row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+    <!-- Clone Role Modal -->
+    <div id="katari-clone-modal" class="katari-modal">
+        <div class="katari-modal-content">
+            <span class="katari-modal-close">&times;</span>
+            <h2><?php esc_html_e('Clone Role', 'katari-user-role-editor'); ?></h2>
+            <form method="post" action="">
+                <?php wp_nonce_field('katari_clone_role'); ?>
+                <input type="hidden" name="source_role" id="source_role">
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="source_role_display"><?php esc_html_e('Source Role:', 'katari-user-role-editor'); ?></label>
+                        </th>
+                        <td>
+                            <strong id="source_role_display"></strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="new_role_name"><?php esc_html_e('New Role Name:', 'katari-user-role-editor'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" name="new_role_name" id="new_role_name" class="regular-text" required 
+                                   pattern="[a-z0-9_-]+" 
+                                   title="<?php esc_attr_e('Only lowercase letters, numbers, - and _ allowed', 'katari-user-role-editor'); ?>">
+                            <p class="description"><?php esc_html_e('Lowercase letters, numbers, - and _ only', 'katari-user-role-editor'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="new_role_display_name"><?php esc_html_e('Display Name:', 'katari-user-role-editor'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" name="new_role_display_name" id="new_role_display_name" class="regular-text" required>
+                        </td>
+                    </tr>
+                </table>
+                <div class="submit">
+                    <input type="submit" name="katari_clone_role" class="button button-primary" value="<?php esc_attr_e('Clone Role', 'katari-user-role-editor'); ?>">
+                    <button type="button" class="button katari-modal-cancel"><?php esc_html_e('Cancel', 'katari-user-role-editor'); ?></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function toggleCapabilities(role) {
+        var row = document.getElementById('capabilities-' + role);
+        if (row) {
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
     }
-}
 
-function searchCapabilities(role) {
-    var searchInput = document.getElementById('capability-search-' + role);
-    var searchValue = searchInput.value.toLowerCase();
-    var capabilityGroups = document.querySelectorAll('[id^="group-"][id$="-' + role + '"]');
-    
-    capabilityGroups.forEach(function(group) {
-        var capabilities = group.querySelectorAll('.katari-capability-item');
-        var visibleCount = 0;
-        
-        capabilities.forEach(function(capability) {
-            var capName = capability.querySelector('.capability-name').textContent.toLowerCase();
-            if (capName.includes(searchValue)) {
-                capability.style.display = '';
-                visibleCount++;
-            } else {
-                capability.style.display = 'none';
+    document.addEventListener('DOMContentLoaded', function() {
+        // Clone role functionality
+        var cloneModal = document.getElementById('katari-clone-modal');
+        var cloneButtons = document.getElementsByClassName('katari-clone-role');
+        var closeButtons = cloneModal.getElementsByClassName('katari-modal-close')[0];
+        var cancelButton = cloneModal.getElementsByClassName('katari-modal-cancel')[0];
+
+        Array.from(cloneButtons).forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                var role = this.getAttribute('data-role');
+                var name = this.getAttribute('data-name');
+                
+                document.getElementById('source_role').value = role;
+                document.getElementById('source_role_display').textContent = name;
+                cloneModal.style.display = 'block';
+            });
+        });
+
+        function closeModal() {
+            cloneModal.style.display = 'none';
+            document.getElementById('new_role_name').value = '';
+            document.getElementById('new_role_display_name').value = '';
+        }
+
+        closeButtons.addEventListener('click', closeModal);
+        cancelButton.addEventListener('click', closeModal);
+
+        window.addEventListener('click', function(event) {
+            if (event.target == cloneModal) {
+                closeModal();
             }
         });
-        
-        // Show/hide the entire group based on whether it has visible capabilities
-        group.style.display = visibleCount > 0 ? '' : 'none';
     });
-}
 
-function toggleGroupCapabilities(checkbox) {
-    var group = checkbox.dataset.group;
-    var role = checkbox.dataset.role;
-    var groupElement = document.getElementById('group-' + group + '-' + role);
-    if (groupElement) {
-        var capabilities = groupElement.querySelectorAll('.katari-capability-item');
-        capabilities.forEach(function(capability) {
-            if (capability.style.display !== 'none') {
-                capability.querySelector('input[type="checkbox"]').checked = checkbox.checked;
-            }
-        });
+    function toggleAddRoleForm() {
+        var form = document.getElementById('katari-add-role-form');
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+        } else {
+            form.style.display = 'none';
+            // Clear form fields
+            document.getElementById('role_name').value = '';
+            document.getElementById('role_display_name').value = '';
+        }
     }
-}
-</script>
+    </script>
 
-<style>
-.katari-capability-group {
-    background: #fff;
-    border: 1px solid #e2e4e7;
-    padding: 15px;
-    margin: 15px 0;
-    border-radius: 4px;
-}
+    <style>
+    .katari-capability-group {
+        background: #fff;
+        border: 1px solid #e2e4e7;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 4px;
+    }
 
-.katari-capability-group h4 {
-    margin: 0 0 10px 0;
-    color: #1d2327;
-}
+    .katari-capability-group h4 {
+        margin: 0 0 10px 0;
+        color: #1d2327;
+    }
 
-.katari-capabilities-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-    margin-top: 10px;
-}
+    .katari-capabilities-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+    }
 
-.katari-capability-item {
-    display: flex;
-    align-items: center;
-    padding: 5px;
-}
+    .katari-capability-item {
+        display: flex;
+        align-items: center;
+        padding: 5px;
+    }
 
-.katari-content {
-    flex: 1;
-    margin-left: 10px;
-}
+    .katari-content {
+        flex: 1;
+        margin-left: 10px;
+    }
 
-.katari-capability-item input[type="checkbox"] {
-    margin-right: 8px;
-}
+    .katari-capability-item input[type="checkbox"] {
+        margin-right: 8px;
+    }
 
-.description {
-    color: #646970;
-    font-style: italic;
-    margin: 5px 0 15px;
-}
+    .description {
+        color: #646970;
+        font-style: italic;
+        margin: 5px 0 15px;
+    }
 
-.katari-capabilities-header {
-    padding: 10px;
-    background: #f7f7f7;
-    border-bottom: 1px solid #e2e4e7;
-}
+    .katari-capabilities-header {
+        padding: 10px;
+        background: #f7f7f7;
+        border-bottom: 1px solid #e2e4e7;
+    }
 
-.katari-capability-search {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #e2e4e7;
-}
+    .katari-capability-search {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #e2e4e7;
+    }
 
-.katari-group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #e2e4e7;
-}
+    .katari-group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #e2e4e7;
+    }
 
-.katari-select-all {
-    margin-left: 10px;
-}
+    .katari-select-all {
+        margin-left: 10px;
+    }
 
-.katari-select-all-checkbox {
-    margin-right: 5px;
-}
-</style>
+    .katari-select-all-checkbox {
+        margin-right: 5px;
+    }
+
+    .katari-modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .katari-modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+
+    .katari-modal-close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .katari-modal-close:hover,
+    .katari-modal-close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    </style>

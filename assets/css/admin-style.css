@@ -167,7 +167,6 @@
 .katari-capability-item {
     background: #f8f9fa;
     border: 1px solid #e2e4e7;
-    border-radius: 4px;
     padding: 12px;
     position: relative;
     min-height: 24px;
@@ -485,6 +484,30 @@
     width: 100%;
     box-sizing: border-box;
     overflow: hidden;
+}
+
+.katari-section h2 {
+    margin-top: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.katari-section .form-table th {
+    width: 200px;
+    padding: 20px 10px;
+}
+
+.katari-section .form-table td {
+    padding: 20px 10px;
+}
+
+.katari-section .description {
+    margin: 5px 0 0;
+    color: #666;
+}
+
+.katari-section select {
+    min-width: 25em;
 }
 
 /* Roles Grid */
@@ -1590,4 +1613,133 @@
     .capability-description {
         font-size: 13px;
     }
+}
+
+/* Modal Styles */
+.katari-modal {
+    display: none;
+    position: fixed;
+    z-index: 999999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.katari-modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 30px;
+    width: 50%;
+    max-width: 600px;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
+.katari-modal h2 {
+    margin: 0 0 20px;
+    padding: 0 0 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.katari-modal-close {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    color: #666;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.katari-modal-close:hover,
+.katari-modal-close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.katari-modal .form-table {
+    margin-top: 0;
+}
+
+.katari-modal .form-table th {
+    padding: 20px 10px 20px 0;
+    width: 130px;
+}
+
+.katari-modal .form-table td {
+    padding: 15px 10px;
+}
+
+.katari-modal .description {
+    margin: 5px 0 0;
+    color: #666;
+}
+
+.katari-modal .submit {
+    margin: 20px 0 0;
+    padding: 15px 0 0;
+    border-top: 1px solid #eee;
+}
+
+.button-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #2271b1;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.button-link:hover {
+    color: #135e96;
+}
+
+/* Add New Role Form */
+.katari-form-container {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    margin: 20px 0;
+    padding: 20px;
+    border-radius: 3px;
+}
+
+.katari-form-container .form-table {
+    margin-top: 0;
+}
+
+.katari-form-container .form-table th {
+    padding: 20px 10px 20px 0;
+    width: 130px;
+}
+
+.katari-form-container .form-table td {
+    padding: 15px 10px;
+}
+
+.katari-form-container .description {
+    margin: 5px 0 0;
+    color: #666;
+}
+
+.katari-form-container .submit {
+    margin: 20px 0 0;
+    padding: 15px 0 0;
+    border-top: 1px solid #eee;
+}
+
+/* Delete button styling */
+.button-link.delete-role {
+    color: #dc3232;
+}
+
+.button-link.delete-role:hover {
+    color: #dc3232;
+    text-decoration: underline;
 }

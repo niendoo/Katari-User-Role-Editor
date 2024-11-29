@@ -77,6 +77,40 @@ class Katari_Capabilities_Manager {
         if (isset($_POST['katari_restore_roles']) && isset($_POST['_wpnonce'])) {
             $this->restore_default_roles();
         }
+
+        // Handle role cloning
+        if (isset($_POST['katari_clone_role']) && isset($_POST['_wpnonce'])) {
+            if (!wp_verify_nonce($_POST['_wpnonce'], 'katari_clone_role')) {
+                wp_die(__('Security check failed.', 'katari-user-role-editor'));
+            }
+
+            if (!current_user_can('manage_options')) {
+                wp_die(__('You do not have sufficient permissions.', 'katari-user-role-editor'));
+            }
+
+            $source_role = isset($_POST['source_role']) ? sanitize_text_field($_POST['source_role']) : '';
+            $new_role_name = isset($_POST['new_role_name']) ? sanitize_text_field($_POST['new_role_name']) : '';
+            $new_role_display_name = isset($_POST['new_role_display_name']) ? sanitize_text_field($_POST['new_role_display_name']) : '';
+
+            if (empty($source_role) || empty($new_role_name) || empty($new_role_display_name)) {
+                wp_die(__('Missing required fields.', 'katari-user-role-editor'));
+            }
+
+            $result = $this->clone_role($source_role, $new_role_name, $new_role_display_name);
+
+            if (is_wp_error($result)) {
+                wp_die($result->get_error_message());
+            }
+
+            wp_safe_redirect(add_query_arg(
+                array(
+                    'page' => 'katari-role-editor',
+                    'message' => 'role_cloned'
+                ),
+                admin_url('admin.php')
+            ));
+            exit;
+        }
     }
 
     /**
@@ -228,6 +262,47 @@ class Katari_Capabilities_Manager {
     }
 
     /**
+     * Clone an existing role.
+     *
+     * @param string $source_role The role to clone from
+     * @param string $new_role_name The name for the new role
+     * @param string $new_role_display_name The display name for the new role
+     * @return WP_Role|WP_Error The new role object or WP_Error on failure
+     */
+    public function clone_role($source_role, $new_role_name, $new_role_display_name) {
+        // Validate source role exists
+        $role = get_role($source_role);
+        if (!$role) {
+            return new WP_Error('invalid_role', __('Source role does not exist.', 'katari-user-role-editor'));
+        }
+
+        // Validate new role name
+        if (empty($new_role_name) || !preg_match('/^[a-z0-9_-]+$/', $new_role_name)) {
+            return new WP_Error('invalid_role_name', __('Invalid role name. Use only lowercase letters, numbers, and underscores.', 'katari-user-role-editor'));
+        }
+
+        // Check if new role already exists
+        if (get_role($new_role_name)) {
+            return new WP_Error('role_exists', __('A role with this name already exists.', 'katari-user-role-editor'));
+        }
+
+        // Get all capabilities of the source role
+        $capabilities = $role->capabilities;
+
+        // Create new role with the same capabilities
+        $new_role = add_role($new_role_name, $new_role_display_name, $capabilities);
+
+        if (null === $new_role) {
+            return new WP_Error('role_creation_failed', __('Failed to create new role.', 'katari-user-role-editor'));
+        }
+
+        // Log the role cloning action
+        do_action('katari_role_cloned', $source_role, $new_role_name);
+
+        return $new_role;
+    }
+
+    /**
      * Restore WordPress default roles and capabilities.
      */
     private function restore_default_roles() {
@@ -354,6 +429,9 @@ class Katari_Capabilities_Manager {
                 break;
             case 'roles_restored':
                 $notice_message = __('Default WordPress roles have been restored successfully.', 'katari-user-role-editor');
+                break;
+            case 'role_cloned':
+                $notice_message = __('Role cloned successfully.', 'katari-user-role-editor');
                 break;
         }
 

@@ -19,9 +19,6 @@ class Katari_Activity_Monitor {
         add_action('transition_post_status', array($this, 'log_post_status_change'), 10, 3);
         add_action('delete_post', array($this, 'log_post_deletion'));
         add_action('post_updated', array($this, 'log_post_update'), 10, 3);
-        add_action('add_post_meta', array($this, 'log_post_meta_addition'), 10, 3);
-        add_action('update_post_meta', array($this, 'log_post_meta_update'), 10, 4);
-        add_action('delete_post_meta', array($this, 'log_post_meta_deletion'), 10, 4);
         
         // Comment related actions
         add_action('wp_insert_comment', array($this, 'log_comment_creation'), 10, 2);
@@ -39,9 +36,6 @@ class Katari_Activity_Monitor {
         add_action('wp_logout', array($this, 'log_user_logout'));
         add_action('delete_user', array($this, 'log_user_deletion'));
         add_action('set_user_role', array($this, 'log_user_role_change'), 10, 3);
-        add_action('add_user_meta', array($this, 'log_user_meta_addition'), 10, 3);
-        add_action('update_user_meta', array($this, 'log_user_meta_update'), 10, 4);
-        add_action('delete_user_meta', array($this, 'log_user_meta_deletion'), 10, 4);
         
         // Plugin/Theme actions
         add_action('activated_plugin', array($this, 'log_plugin_activation'));
@@ -54,8 +48,6 @@ class Katari_Activity_Monitor {
         add_action('add_attachment', array($this, 'log_media_upload'));
         add_action('edit_attachment', array($this, 'log_media_update'));
         add_action('delete_attachment', array($this, 'log_media_deletion'));
-        add_action('wp_handle_upload', array($this, 'log_media_upload_complete'), 10, 2);
-        add_filter('wp_generate_attachment_metadata', array($this, 'log_media_generate_metadata'), 10, 2);
         
         // Menu actions
         add_action('wp_update_nav_menu', array($this, 'log_menu_update'));
@@ -87,18 +79,15 @@ class Katari_Activity_Monitor {
             return;
         }
 
+        // Skip if this is a new post being created
+        if ($old_status === 'new') {
+            return;
+        }
+
         $user = wp_get_current_user();
         $post_type = get_post_type_object($post->post_type)->labels->singular_name;
 
-        if ($new_status === 'publish' && $old_status !== 'publish') {
-            $description = sprintf(
-                /* translators: 1: User display name, 2: Post type, 3: Post title */
-                __('User %1$s published a new %2$s: "%3$s"', 'katari-user-role-editor'),
-                $user->display_name,
-                $post_type,
-                $post->post_title
-            );
-        } elseif ($new_status === 'trash') {
+        if ($new_status === 'trash') {
             $description = sprintf(
                 /* translators: 1: User display name, 2: Post type, 3: Post title */
                 __('User %1$s moved %2$s "%3$s" to trash', 'katari-user-role-editor'),
@@ -106,46 +95,52 @@ class Katari_Activity_Monitor {
                 $post_type,
                 $post->post_title
             );
-        } else {
-            $description = sprintf(
-                /* translators: 1: User display name, 2: Post type, 3: Post title, 4: Old status, 5: New status */
-                __('User %1$s changed %2$s "%3$s" status from "%4$s" to "%5$s"', 'katari-user-role-editor'),
-                $user->display_name,
-                $post_type,
-                $post->post_title,
-                $old_status,
-                $new_status
-            );
+            $this->log_activity('post_trash', $description);
+            return;
         }
 
-        $this->log_activity('post_status', $description);
-    }
+        if ($new_status === 'publish' && $old_status !== 'publish') {
+            $description = sprintf(
+                /* translators: 1: User display name, 2: Post type, 3: Post title */
+                __('User %1$s published %2$s "%3$s"', 'katari-user-role-editor'),
+                $user->display_name,
+                $post_type,
+                $post->post_title
+            );
+            $this->log_activity('post_publish', $description);
+            return;
+        }
 
-    /**
-     * Log post deletion
-     */
-    public function log_post_deletion($post_id) {
-        $post = get_post($post_id);
-        if (!$post) return;
-
-        $user = wp_get_current_user();
-        $post_type = get_post_type_object($post->post_type)->labels->singular_name;
-
+        // For other status changes
         $description = sprintf(
-            /* translators: 1: User display name, 2: Post type, 3: Post title */
-            __('User %1$s permanently deleted %2$s "%3$s"', 'katari-user-role-editor'),
+            /* translators: 1: User display name, 2: Post type, 3: Post title, 4: Old status, 5: New status */
+            __('User %1$s changed %2$s "%3$s" status from "%4$s" to "%5$s"', 'katari-user-role-editor'),
             $user->display_name,
             $post_type,
-            $post->post_title
+            $post->post_title,
+            $old_status,
+            $new_status
         );
-
-        $this->log_activity('post_deletion', $description);
+        $this->log_activity('post_status_change', $description);
     }
 
     /**
      * Log post update
      */
     public function log_post_update($post_ID, $post_after, $post_before) {
+        // Skip logging if the post is being trashed or if status is changing
+        if ($post_after->post_status !== $post_before->post_status) {
+            return;
+        }
+
+        // Skip if only the modified date was updated
+        if ($post_after->post_modified !== $post_before->post_modified 
+            && $post_after->post_content === $post_before->post_content
+            && $post_after->post_title === $post_before->post_title
+            && $post_after->post_excerpt === $post_before->post_excerpt) {
+            return;
+        }
+
         $user = wp_get_current_user();
         $post_type = get_post_type_object($post_after->post_type)->labels->singular_name;
 
@@ -211,65 +206,6 @@ class Katari_Activity_Monitor {
         );
 
         $this->log_activity('media_upload', $description);
-    }
-
-    /**
-     * Log media upload completion
-     */
-    public function log_media_upload_complete($upload, $context) {
-        $user = wp_get_current_user();
-        $file_name = basename($upload['file']);
-        $file_type = strtoupper($upload['type']);
-
-        $description = sprintf(
-            /* translators: 1: User display name, 2: File name, 3: File type */
-            __('User %1$s completed uploading file: "%2$s" (%3$s)', 'katari-user-role-editor'),
-            $user->display_name,
-            $file_name,
-            $file_type
-        );
-
-        $this->log_activity('media_upload_complete', $description);
-        return $upload;
-    }
-
-    /**
-     * Log media metadata generation
-     */
-    public function log_media_generate_metadata($metadata, $attachment_id) {
-        if (!$metadata) {
-            return $metadata;
-        }
-
-        $post = get_post($attachment_id);
-        if (!$post || $post->post_type !== 'attachment') {
-            return $metadata;
-        }
-
-        $user = wp_get_current_user();
-        $file_name = basename(get_attached_file($attachment_id));
-
-        // If it's an image, include dimensions
-        if (isset($metadata['width']) && isset($metadata['height'])) {
-            $description = sprintf(
-                /* translators: 1: User display name, 2: File name, 3: Width, 4: Height */
-                __('User %1$s uploaded image "%2$s" (Dimensions: %3$dx%4$dpx)', 'katari-user-role-editor'),
-                $user->display_name,
-                $file_name,
-                $metadata['width'],
-                $metadata['height']
-            );
-        } else {
-            $description = sprintf(
-                /* translators: 1: User display name, 2: File name */
-                __('User %1$s processed media file "%2$s"', 'katari-user-role-editor'),
-                $user->display_name,
-                $file_name
-            );
-        }
-
-        $this->log_activity('media_process', $description);
-        return $metadata;
     }
 
     /**
@@ -455,6 +391,365 @@ class Katari_Activity_Monitor {
         );
 
         $this->log_activity('core_update', $description);
+    }
+
+    /**
+     * Log option addition
+     */
+    public function log_option_addition($option_name, $value) {
+        // Skip some common and noisy options
+        $skip_options = array('_site_transient_', '_transient_', 'cron', 'session_tokens');
+        foreach ($skip_options as $skip) {
+            if (strpos($option_name, $skip) !== false) {
+                return;
+            }
+        }
+
+        $user = wp_get_current_user();
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Option name */
+            __('User %1$s added new option: %2$s', 'katari-user-role-editor'),
+            $user->display_name,
+            $option_name
+        );
+
+        $this->log_activity('option_addition', $description);
+    }
+
+    /**
+     * Log option deletion
+     */
+    public function log_option_deletion($option_name) {
+        // Skip some common and noisy options
+        $skip_options = array('_site_transient_', '_transient_', 'cron', 'session_tokens');
+        foreach ($skip_options as $skip) {
+            if (strpos($option_name, $skip) !== false) {
+                return;
+            }
+        }
+
+        $user = wp_get_current_user();
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Option name */
+            __('User %1$s deleted option: %2$s', 'katari-user-role-editor'),
+            $user->display_name,
+            $option_name
+        );
+
+        $this->log_activity('option_deletion', $description);
+    }
+
+    /**
+     * Log widget update
+     */
+    public function log_widget_update($old_value, $new_value) {
+        $user = wp_get_current_user();
+        $description = sprintf(
+            /* translators: 1: User display name */
+            __('User %1$s updated widget settings', 'katari-user-role-editor'),
+            $user->display_name
+        );
+
+        $this->log_activity('widget_update', $description);
+    }
+
+    /**
+     * Log term update
+     */
+    public function log_term_update($term_id, $tt_id, $taxonomy) {
+        $user = wp_get_current_user();
+        $term = get_term($term_id, $taxonomy);
+        $tax_object = get_taxonomy($taxonomy);
+
+        if (!$term || is_wp_error($term)) {
+            return;
+        }
+
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Taxonomy name, 3: Term name */
+            __('User %1$s updated %2$s: "%3$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $tax_object->labels->singular_name,
+            $term->name
+        );
+
+        $this->log_activity('term_update', $description);
+    }
+
+    /**
+     * Log term deletion
+     */
+    public function log_term_deletion($term_id, $tt_id, $taxonomy, $deleted_term) {
+        $user = wp_get_current_user();
+        $tax_object = get_taxonomy($taxonomy);
+
+        if (!$deleted_term || is_wp_error($deleted_term)) {
+            return;
+        }
+
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Taxonomy name, 3: Term name */
+            __('User %1$s deleted %2$s: "%3$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $tax_object->labels->singular_name,
+            $deleted_term->name
+        );
+
+        $this->log_activity('term_deletion', $description);
+    }
+
+    /**
+     * Log comment update
+     */
+    public function log_comment_update($comment_ID) {
+        $comment = get_comment($comment_ID);
+        if (!$comment) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        $post = get_post($comment->comment_post_ID);
+
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Post title */
+            __('User %1$s edited a comment on "%2$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $post ? $post->post_title : __('(no title)', 'katari-user-role-editor')
+        );
+
+        $this->log_activity('comment_update', $description);
+    }
+
+    /**
+     * Log comment spam
+     */
+    public function log_comment_spam($comment_ID) {
+        $comment = get_comment($comment_ID);
+        if (!$comment) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        $post = get_post($comment->comment_post_ID);
+
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Post title */
+            __('User %1$s marked a comment as spam on "%2$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $post ? $post->post_title : __('(no title)', 'katari-user-role-editor')
+        );
+
+        $this->log_activity('comment_spam', $description);
+    }
+
+    /**
+     * Log comment unspam
+     */
+    public function log_comment_unspam($comment_ID) {
+        $comment = get_comment($comment_ID);
+        if (!$comment) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        $post = get_post($comment->comment_post_ID);
+
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Post title */
+            __('User %1$s unmarked a comment as spam on "%2$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $post ? $post->post_title : __('(no title)', 'katari-user-role-editor')
+        );
+
+        $this->log_activity('comment_unspam', $description);
+    }
+
+    /**
+     * Log comment trash
+     */
+    public function log_comment_trash($comment_ID) {
+        $comment = get_comment($comment_ID);
+        if (!$comment) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        $post = get_post($comment->comment_post_ID);
+
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Post title */
+            __('User %1$s trashed a comment on "%2$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $post ? $post->post_title : __('(no title)', 'katari-user-role-editor')
+        );
+
+        $this->log_activity('comment_trash', $description);
+    }
+
+    /**
+     * Log comment untrash
+     */
+    public function log_comment_untrash($comment_ID) {
+        $comment = get_comment($comment_ID);
+        if (!$comment) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        $post = get_post($comment->comment_post_ID);
+
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Post title */
+            __('User %1$s restored a comment on "%2$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $post ? $post->post_title : __('(no title)', 'katari-user-role-editor')
+        );
+
+        $this->log_activity('comment_untrash', $description);
+    }
+
+    /**
+     * Log user meta addition
+     */
+    public function log_user_meta_addition($meta_id, $user_id, $meta_key) {
+        // Skip logging for internal WordPress user settings
+        if (strpos($meta_key, 'wp_user-settings') === 0) {
+            return;
+        }
+
+        $user = get_userdata($user_id);
+        if (!$user) return;
+
+        $current_user = wp_get_current_user();
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Meta key, 3: Target user display name */
+            __('User %1$s added user meta "%2$s" for user %3$s', 'katari-user-role-editor'),
+            $current_user->display_name,
+            $meta_key,
+            $user->display_name
+        );
+
+        $this->log_activity('user_meta_addition', $description);
+    }
+
+    /**
+     * Log user meta update
+     */
+    public function log_user_meta_update($meta_id, $user_id, $meta_key, $meta_value) {
+        // Skip logging for internal WordPress user settings
+        if (strpos($meta_key, 'wp_user-settings') === 0) {
+            return;
+        }
+
+        $user = get_userdata($user_id);
+        if (!$user) return;
+
+        $current_user = wp_get_current_user();
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Meta key, 3: Target user display name */
+            __('User %1$s updated user meta "%2$s" for user %3$s', 'katari-user-role-editor'),
+            $current_user->display_name,
+            $meta_key,
+            $user->display_name
+        );
+
+        $this->log_activity('user_meta_update', $description);
+    }
+
+    /**
+     * Log user meta deletion
+     */
+    public function log_user_meta_deletion($meta_ids, $user_id, $meta_key, $meta_value) {
+        // Skip logging for internal WordPress user settings
+        if (strpos($meta_key, 'wp_user-settings') === 0) {
+            return;
+        }
+
+        $user = get_userdata($user_id);
+        if (!$user) return;
+
+        $current_user = wp_get_current_user();
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Meta key, 3: Target user display name */
+            __('User %1$s deleted user meta "%2$s" for user %3$s', 'katari-user-role-editor'),
+            $current_user->display_name,
+            $meta_key,
+            $user->display_name
+        );
+
+        $this->log_activity('user_meta_deletion', $description);
+    }
+
+    /**
+     * Log post meta addition
+     */
+    public function log_post_meta_addition($meta_id, $post_id, $meta_key) {
+        // Skip logging for internal WordPress meta
+        if (strpos($meta_key, '_wp_') === 0) {
+            return;
+        }
+
+        $post = get_post($post_id);
+        if (!$post) return;
+
+        $user = wp_get_current_user();
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Meta key, 3: Post title */
+            __('User %1$s added post meta "%2$s" for post "%3$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $meta_key,
+            $post->post_title
+        );
+
+        $this->log_activity('post_meta_addition', $description);
+    }
+
+    /**
+     * Log post meta update
+     */
+    public function log_post_meta_update($meta_id, $post_id, $meta_key, $meta_value) {
+        // Skip logging for internal WordPress meta
+        if (strpos($meta_key, '_wp_') === 0) {
+            return;
+        }
+
+        $post = get_post($post_id);
+        if (!$post) return;
+
+        $user = wp_get_current_user();
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Meta key, 3: Post title */
+            __('User %1$s updated post meta "%2$s" for post "%3$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $meta_key,
+            $post->post_title
+        );
+
+        $this->log_activity('post_meta_update', $description);
+    }
+
+    /**
+     * Log post meta deletion
+     */
+    public function log_post_meta_deletion($meta_ids, $post_id, $meta_key, $meta_value) {
+        // Skip logging for internal WordPress meta
+        if (strpos($meta_key, '_wp_') === 0) {
+            return;
+        }
+
+        $post = get_post($post_id);
+        if (!$post) return;
+
+        $user = wp_get_current_user();
+        $description = sprintf(
+            /* translators: 1: User display name, 2: Meta key, 3: Post title */
+            __('User %1$s deleted post meta "%2$s" from post "%3$s"', 'katari-user-role-editor'),
+            $user->display_name,
+            $meta_key,
+            $post->post_title
+        );
+
+        $this->log_activity('post_meta_deletion', $description);
     }
 
     /**
