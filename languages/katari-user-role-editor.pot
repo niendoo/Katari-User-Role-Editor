@@ -1,0 +1,165 @@
+# Copyright (C) 2023 Your Name
+# This file is distributed under the same license as the Katari User Role Editor package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Katari User Role Editor 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/katari-user-role-editor\n"
+"POT-Creation-Date: 2023-01-01 00:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2023-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: includes/class-katari-capabilities-manager.php:123
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+#: includes/class-katari-capabilities-manager.php:134
+msgid "Role not found."
+msgstr ""
+
+#: includes/class-katari-capabilities-manager.php:149
+msgid "Role updated successfully."
+msgstr ""
+
+#: includes/class-katari-capabilities-manager.php:189
+msgid "Role already exists."
+msgstr ""
+
+#: includes/class-katari-capabilities-manager.php:211
+msgid "This role cannot be deleted."
+msgstr ""
+
+#: includes/templates/admin-page.php:15
+msgid "Katari User Role Editor"
+msgstr ""
+
+#: includes/templates/admin-page.php:19
+msgid "Roles imported successfully."
+msgstr ""
+
+#: includes/templates/admin-page.php:25
+msgid "Export Roles"
+msgstr ""
+
+#: includes/templates/admin-page.php:29
+msgid "Import Roles"
+msgstr ""
+
+#: includes/templates/admin-page.php:33
+msgid "Add New Role"
+msgstr ""
+
+#: includes/templates/admin-page.php:42
+msgid "Import"
+msgstr ""
+
+#: includes/templates/admin-page.php:43
+msgid "Cancel"
+msgstr ""
+
+#: includes/templates/admin-page.php:52
+msgid "Role Name:"
+msgstr ""
+
+#: includes/templates/admin-page.php:56
+msgid "Display Name:"
+msgstr ""
+
+#: includes/templates/admin-page.php:60
+msgid "Add Role"
+msgstr ""
+
+#: includes/templates/admin-page.php:69
+msgid "Role"
+msgstr ""
+
+#: includes/templates/admin-page.php:70
+msgid "Users"
+msgstr ""
+
+#: includes/templates/admin-page.php:71
+msgid "Capabilities"
+msgstr ""
+
+#: includes/templates/admin-page.php:72
+msgid "Actions"
+msgstr ""
+
+#: includes/templates/admin-page.php:98
+msgid "%d capabilities"
+msgstr ""
+
+#: includes/templates/admin-page.php:100
+msgid "No capabilities"
+msgstr ""
+
+#: includes/templates/admin-page.php:106
+msgid "Edit Capabilities"
+msgstr ""
+
+#: includes/templates/admin-page.php:109
+msgid "Delete"
+msgstr ""
+
+#: includes/templates/admin-page.php:134
+msgid "Update Capabilities"
+msgstr ""
+
+#: includes/templates/admin-page.php:148
+msgid "Are you sure you want to delete the role \"%s\"?"
+msgstr ""
+
+#: includes/templates/analytics-page.php:15
+msgid "Role Analytics"
+msgstr ""
+
+#: includes/templates/analytics-page.php:20
+msgid "Total Roles"
+msgstr ""
+
+#: includes/templates/analytics-page.php:28
+msgid "Users per Role"
+msgstr ""
+
+#: includes/templates/analytics-page.php:55
+msgid "Most Used Capabilities"
+msgstr ""
+
+#: includes/templates/analytics-page.php:60
+msgid "Capability"
+msgstr ""
+
+#: includes/templates/analytics-page.php:61
+msgid "Usage Count"
+msgstr ""
+
+#: includes/templates/analytics-page.php:82
+msgid "Recent Changes"
+msgstr ""
+
+#: includes/templates/analytics-page.php:87
+msgid "Action"
+msgstr ""
+
+#: includes/templates/analytics-page.php:88
+msgid "Description"
+msgstr ""
+
+#: includes/templates/analytics-page.php:89
+msgid "Date"
+msgstr ""
+
+#: includes/templates/analytics-page.php:108
+msgid "Most Active Users"
+msgstr ""
+
+#: includes/templates/analytics-page.php:113
+msgid "User"
+msgstr ""
+
+#: includes/templates/analytics-page.php:132
+msgid "Role Usage Trends"
+msgstr ""

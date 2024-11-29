@@ -1,0 +1,1244 @@
+/* Katari User Role Editor Admin Styles */
+:root {
+    --katari-primary: #2271b1;
+    --katari-primary-dark: #135e96;
+    --katari-success: #00a32a;
+    --katari-error: #d63638;
+    --katari-warning: #dba617;
+    --katari-background: #f0f0f1;
+    --katari-border: #c3c4c7;
+    --katari-text: #1d2327;
+    --katari-text-light: #50575e;
+    --katari-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    --katari-transition: all 0.3s ease;
+}
+
+/* Main container */
+.katari-wrap {
+    margin: 20px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Header Section */
+.katari-header {
+    background: #fff;
+    padding: 24px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: var(--katari-box-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.katari-header h1 {
+    margin: 0;
+    color: var(--katari-text);
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.katari-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.katari-button,
+.katari-wrap .button {
+    background: var(--katari-primary);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--katari-transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+}
+
+.katari-button:hover,
+.katari-wrap .button:hover {
+    background: var(--katari-primary-dark);
+    color: #fff;
+}
+
+.katari-button-secondary,
+.katari-wrap .button-secondary {
+    background: #fff;
+    color: var(--katari-text);
+    border: 1px solid var(--katari-border);
+}
+
+.katari-button-secondary:hover,
+.katari-wrap .button-secondary:hover {
+    background: var(--katari-background);
+    color: var(--katari-text);
+    border-color: var(--katari-text-light);
+}
+
+/* Tables */
+.katari-table {
+    border-spacing: 0;
+    width: 100%;
+    clear: both;
+    margin: 0;
+}
+
+.katari-table th,
+.katari-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--katari-border);
+}
+
+.katari-table th {
+    background: var(--katari-background);
+    font-weight: 600;
+    color: var(--katari-text);
+}
+
+.katari-table tr:last-child td {
+    border-bottom: none;
+}
+
+.katari-table tr:hover td {
+    background: var(--katari-background);
+}
+
+/* Forms and Modals */
+.katari-modal {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+}
+
+.katari-modal h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: var(--katari-text);
+}
+
+.katari-form-row {
+    margin-bottom: 16px;
+}
+
+.katari-form-row label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--katari-text);
+}
+
+.katari-form-row input[type="text"],
+.katari-form-row input[type="file"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--katari-border);
+    border-radius: 4px;
+    transition: var(--katari-transition);
+}
+
+.katari-form-row input[type="text"]:focus {
+    border-color: var(--katari-primary);
+    box-shadow: 0 0 0 1px var(--katari-primary);
+    outline: none;
+}
+
+/* Capabilities Grid */
+.katari-capabilities-grid {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+/* Responsive grid adjustments */
+@media screen and (min-width: 480px) {
+    .katari-capabilities-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .katari-capabilities-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    .katari-capabilities-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .katari-capabilities-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+}
+
+/* Capability Checkbox */
+.katari-capability-checkbox {
+    display: flex;
+    align-items: flex-start;
+    padding: 8px;
+    background: #fff;
+    border: 1px solid #e2e4e7;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+}
+
+.katari-capability-checkbox:hover {
+    background: #f0f0f1;
+}
+
+.katari-capability-checkbox input[type="checkbox"] {
+    margin: 3px 8px 0 0;
+    flex-shrink: 0;
+}
+
+.katari-capability-checkbox span {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #50575e;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    flex: 1;
+}
+
+/* Description */
+.description {
+    color: #646970;
+    font-style: italic;
+    margin: 5px 0 15px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* Forms */
+.form-table {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-table td,
+.form-table th {
+    padding: 15px 10px;
+    word-wrap: break-word;
+}
+
+/* Buttons */
+.submit-button {
+    margin-top: 15px;
+    padding: 15px 0;
+    background: #f8f9fa;
+    border-top: 1px solid #e2e4e7;
+    text-align: right;
+}
+
+.button {
+    min-height: 32px;
+    line-height: 2.30769231;
+    padding: 0 12px;
+    white-space: normal;
+    height: auto;
+}
+
+/* Messages */
+.notice {
+    margin: 20px 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Mobile Adjustments */
+@media screen and (max-width: 782px) {
+    .katari-wrap {
+        margin: 10px;
+    }
+
+    .katari-capabilities-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .katari-capability-checkbox {
+        padding: 6px;
+    }
+
+    .katari-capability-group {
+        padding: 12px;
+    }
+    
+    .button {
+        font-size: 14px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .katari-capabilities-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Print styles */
+@media print {
+    .katari-capability-checkbox {
+        page-break-inside: avoid;
+    }
+    
+    .katari-wrap {
+        margin: 0;
+    }
+}
+
+/* Sections */
+.katari-section {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Roles Grid */
+.katari-roles-grid {
+    display: grid;
+    gap: 20px;
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Role Card */
+.katari-role-card {
+    background: #f8f9fa;
+    border: 1px solid #e2e4e7;
+    padding: 20px;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Role Actions */
+.katari-role-actions {
+    margin: 15px 0;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Capabilities Editor */
+.katari-capabilities-editor {
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Capability Groups */
+.katari-capability-group {
+    background: #f8f9fa;
+    border: 1px solid #e2e4e7;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.katari-capability-group h4 {
+    margin: 0 0 10px 0;
+    color: #1d2327;
+    font-size: 14px;
+    font-weight: 600;
+    word-wrap: break-word;
+}
+
+/* Analytics Grid Layout */
+.katari-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.katari-analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* Card Base Styles */
+.katari-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: var(--katari-box-shadow);
+    height: auto;
+    min-height: 200px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* Chart Container */
+.katari-chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Activity List Container */
+.katari-activity-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Users List Container */
+.katari-users-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Capabilities List Container */
+.katari-capabilities-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Scrollbar Styling */
+.katari-activity-list::-webkit-scrollbar,
+.katari-users-list::-webkit-scrollbar,
+.katari-capabilities-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.katari-activity-list::-webkit-scrollbar-track,
+.katari-users-list::-webkit-scrollbar-track,
+.katari-capabilities-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.katari-activity-list::-webkit-scrollbar-thumb,
+.katari-users-list::-webkit-scrollbar-thumb,
+.katari-capabilities-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.katari-activity-list::-webkit-scrollbar-thumb:hover,
+.katari-users-list::-webkit-scrollbar-thumb:hover,
+.katari-capabilities-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Notices */
+.katari-notice {
+    padding: 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.katari-notice-success {
+    background: color-mix(in srgb, var(--katari-success) 10%, white);
+    border-left: 4px solid var(--katari-success);
+}
+
+.katari-notice-error {
+    background: color-mix(in srgb, var(--katari-error) 10%, white);
+    border-left: 4px solid var(--katari-error);
+}
+
+.katari-notice-warning {
+    background: color-mix(in srgb, var(--katari-warning) 10%, white);
+    border-left: 4px solid var(--katari-warning);
+}
+
+/* Analytics Cards */
+.katari-analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.katari-card {
+    background: #fff;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: var(--katari-box-shadow);
+}
+
+.katari-card h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: var(--katari-text);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.katari-card-content {
+    color: var(--katari-text-light);
+}
+
+.katari-number {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--katari-primary);
+    display: block;
+    margin: 16px 0;
+}
+
+.katari-full-width {
+    grid-column: 1 / -1;
+}
+
+/* Analytics Page Specific Styles */
+.katari-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.katari-analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.katari-stat-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: var(--katari-box-shadow);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.katari-stat-icon {
+    background: var(--katari-primary);
+    color: #fff;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.katari-stat-icon .dashicons {
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+}
+
+.katari-icon-purple { background: #6b5ecd; }
+.katari-icon-orange { background: #f59e0b; }
+.katari-icon-green { background: #10b981; }
+
+.katari-stat-content {
+    flex: 1;
+}
+
+.katari-stat-content h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: var(--katari-text-light);
+}
+
+.katari-stat-number {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--katari-text);
+    line-height: 1.2;
+}
+
+.katari-stat-trend {
+    font-size: 12px;
+    color: var(--katari-text-light);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.katari-trend-up {
+    color: var(--katari-success);
+}
+
+.katari-trend-down {
+    color: var(--katari-error);
+}
+
+.katari-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: var(--katari-box-shadow);
+}
+
+.katari-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.katari-card-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.katari-chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.katari-activity-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.katari-activity-item {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--katari-border);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.katari-activity-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.katari-activity-icon {
+    background: var(--katari-background);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.katari-activity-content {
+    flex: 1;
+}
+
+.katari-activity-title {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.katari-activity-meta {
+    font-size: 12px;
+    color: var(--katari-text-light);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 782px) {
+    .katari-wrap {
+        margin: 10px;
+    }
+
+    .katari-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .katari-analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .katari-stat-card {
+        padding: 16px;
+    }
+
+    .katari-card {
+        padding: 16px;
+    }
+
+    .katari-stat-number {
+        font-size: 20px;
+    }
+
+    .katari-chart-container {
+        height: 250px;
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .katari-chart-card {
+        grid-column: span 1;
+    }
+}
+
+@media screen and (max-width: 782px) {
+    .katari-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .katari-stat-card {
+        padding: 16px;
+    }
+
+    .katari-stat-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .katari-stat-number {
+        font-size: 24px;
+    }
+
+    .katari-activity-item {
+        padding: 12px;
+    }
+
+    .katari-user-item {
+        flex-wrap: wrap;
+    }
+
+    .katari-user-trend {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* Loading States */
+.katari-loading {
+    position: relative;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.katari-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 2px solid var(--katari-primary);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: katari-spin 1s linear infinite;
+}
+
+@keyframes katari-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Tooltips */
+.katari-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.katari-tooltip:hover::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    background: var(--katari-text);
+    color: #fff;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+/* Capabilities List */
+.katari-capabilities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.katari-capability-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.katari-capability-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.katari-capability-name {
+    font-size: 14px;
+    color: var(--katari-text);
+}
+
+.katari-capability-count {
+    font-size: 12px;
+    color: var(--katari-text-light);
+}
+
+.katari-capability-bar {
+    height: 6px;
+    background: var(--katari-background);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.katari-capability-progress {
+    height: 100%;
+    background: var(--katari-primary);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Activity List */
+.katari-activity-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.katari-activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.katari-activity-item:last-child {
+    border-bottom: none;
+}
+
+.katari-activity-item:hover {
+    background-color: #f8f9fa;
+}
+
+.katari-activity-icon {
+    margin-right: 15px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.katari-activity-icon .dashicons {
+    color: #666;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.katari-activity-content {
+    flex: 1;
+}
+
+.katari-activity-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.katari-activity-description {
+    color: #333;
+    line-height: 1.4;
+    margin-top: 5px;
+}
+
+.katari-activity-time {
+    color: #666;
+    font-size: 12px;
+}
+
+.katari-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.katari-badge-info {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.katari-badge-success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.katari-badge-error {
+    background-color: #fbe9e7;
+    color: #d84315;
+}
+
+.katari-badge-warning {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.katari-badge-default {
+    background-color: #f5f5f5;
+    color: #666;
+}
+
+.katari-no-activity {
+    text-align: center;
+    padding: 30px 20px;
+    color: #666;
+}
+
+.katari-no-activity p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Card Actions */
+.katari-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.katari-button-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #666;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.katari-button-secondary:hover {
+    background: #f1f3f4;
+    border-color: #ccc;
+    color: #333;
+}
+
+/* Users List */
+.katari-users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.katari-user-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    background: var(--katari-background);
+    border-radius: 8px;
+    transition: var(--katari-transition);
+}
+
+.katari-user-item:hover {
+    background: color-mix(in srgb, var(--katari-background) 80%, white);
+}
+
+.katari-user-rank {
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--katari-primary);
+}
+
+.katari-user-avatar img {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+}
+
+.katari-user-info {
+    flex: 1;
+}
+
+.katari-user-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--katari-text);
+    margin-bottom: 4px;
+}
+
+.katari-user-actions {
+    font-size: 12px;
+    color: var(--katari-text-light);
+}
+
+.katari-user-trend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--katari-success);
+}
+
+/* Chart Card Specific Styles */
+.katari-chart-card {
+    height: 450px;
+    max-height: 450px;
+    overflow: hidden;
+}
+
+.katari-chart-container {
+    position: relative;
+    height: 350px;
+    max-height: 350px;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Chart Legend */
+.katari-chart-legend {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    max-height: 60px;
+    overflow-y: auto;
+}
+
+.katari-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--katari-background);
+}
+
+.katari-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.katari-legend-label {
+    font-size: 12px;
+    color: var(--katari-text);
+}
+
+/* Responsive grid columns */
+@media screen and (min-width: 600px) {
+    .katari-capabilities-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media screen and (min-width: 960px) {
+    .katari-capabilities-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .katari-capabilities-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Activity Log Styles */
+.katari-filters {
+    margin: 20px 0;
+    padding: 15px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.katari-filters select,
+.katari-filters input[type="date"],
+.katari-filters input[type="search"] {
+    height: 35px;
+    min-width: 150px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0 10px;
+}
+
+.katari-filters input[type="search"] {
+    min-width: 200px;
+}
+
+.katari-activity-table {
+    margin-top: 20px;
+}
+
+.katari-action-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.katari-action-role_update {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.katari-action-role_creation {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.katari-action-role_deletion {
+    background-color: #fbe9e7;
+    color: #d84315;
+}
+
+.katari-action-capability_toggle {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.katari-pagination {
+    margin: 20px 0;
+    padding: 10px;
+    text-align: center;
+}
+
+.katari-pagination .page-numbers {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 0 2px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    text-decoration: none;
+    color: #666;
+}
+
+.katari-pagination .page-numbers.current {
+    background-color: #0073aa;
+    color: #fff;
+    border-color: #0073aa;
+}
+
+.katari-pagination .page-numbers:hover:not(.current) {
+    background-color: #f5f5f5;
+}
+
+.katari-no-records {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+/* Activity Card in Dashboard */
+.katari-activity-card {
+    grid-column: span 2;
+}
+
+.katari-activity-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.katari-activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.katari-activity-item:last-child {
+    border-bottom: none;
+}
+
+.katari-activity-icon {
+    margin-right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.katari-activity-icon .dashicons {
+    color: #666;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.katari-activity-content {
+    flex: 1;
+}
+
+.katari-activity-description {
+    color: #333;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.katari-activity-time {
+    color: #666;
+    font-size: 12px;
+}
