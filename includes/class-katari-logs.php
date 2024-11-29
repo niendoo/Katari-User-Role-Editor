@@ -28,10 +28,10 @@ class Katari_Logs {
         $this->table_name = $wpdb->prefix . 'katari_logs';
         
         add_action( 'plugins_loaded', array( $this, 'create_table' ) );
-        add_action( 'katari_role_updated', array( $this, 'log_role_update' ), 10, 2 );
+        add_action( 'katari_role_updated', array( $this, 'log_role_update' ), 10, 3 );
         add_action( 'katari_capability_toggled', array( $this, 'log_capability_toggle' ), 10, 3 );
         add_action( 'katari_role_created', array( $this, 'log_role_creation' ), 10, 2 );
-        add_action( 'katari_role_deleted', array( $this, 'log_role_deletion' ) );
+        add_action( 'katari_role_deleted', array( $this, 'log_role_deletion' ), 10, 2 );
     }
 
     /**
@@ -83,18 +83,38 @@ class Katari_Logs {
      * Log role update.
      *
      * @param string $role_name Role name.
-     * @param array  $capabilities Capabilities.
+     * @param array  $capabilities New capabilities.
+     * @param array  $old_caps Old capabilities.
      */
-    public function log_role_update( $role_name, $capabilities ) {
+    public function log_role_update( $role_name, $capabilities, $old_caps ) {
         $user = wp_get_current_user();
+        $added_caps = array_diff($capabilities, $old_caps);
+        $removed_caps = array_diff($old_caps, $capabilities);
+        
         $description = sprintf(
             /* translators: 1: User display name, 2: Role name */
-            __( 'User %1$s updated capabilities for role %2$s', 'katari-user-role-editor' ),
+            __('User %1$s modified the "%2$s" role.', 'katari-user-role-editor'),
             $user->display_name,
             $role_name
         );
+
+        if (!empty($added_caps)) {
+            $description .= ' ' . sprintf(
+                /* translators: 1: List of capabilities */
+                __('Added capabilities: %1$s.', 'katari-user-role-editor'),
+                implode(', ', $added_caps)
+            );
+        }
+
+        if (!empty($removed_caps)) {
+            $description .= ' ' . sprintf(
+                /* translators: 1: List of capabilities */
+                __('Removed capabilities: %1$s.', 'katari-user-role-editor'),
+                implode(', ', $removed_caps)
+            );
+        }
         
-        $this->add_log( 'role_update', $description );
+        $this->add_log('role_update', $description);
     }
 
     /**
@@ -107,50 +127,71 @@ class Katari_Logs {
     public function log_capability_toggle( $role_name, $capability, $granted ) {
         $user = wp_get_current_user();
         $description = sprintf(
-            /* translators: 1: User display name, 2: Capability name, 3: Granted/Revoked, 4: Role name */
-            __( 'User %1$s %2$s capability %3$s for role %4$s', 'katari-user-role-editor' ),
+            /* translators: 1: User display name, 2: Action, 3: Capability name, 4: Role name */
+            __('User %1$s %2$s the capability "%3$s" for the "%4$s" role.', 'katari-user-role-editor'),
             $user->display_name,
-            $granted ? __( 'granted', 'katari-user-role-editor' ) : __( 'revoked', 'katari-user-role-editor' ),
+            $granted ? __('granted', 'katari-user-role-editor') : __('revoked', 'katari-user-role-editor'),
             $capability,
             $role_name
         );
         
-        $this->add_log( 'capability_toggle', $description );
+        $this->add_log('capability_toggle', $description);
     }
 
     /**
      * Log role creation.
      *
      * @param string $role_name Role name.
-     * @param array  $capabilities Capabilities.
+     * @param array  $capabilities Initial capabilities.
      */
     public function log_role_creation( $role_name, $capabilities ) {
         $user = wp_get_current_user();
         $description = sprintf(
             /* translators: 1: User display name, 2: Role name */
-            __( 'User %1$s created new role %2$s', 'katari-user-role-editor' ),
+            __('User %1$s created a new role "%2$s"', 'katari-user-role-editor'),
             $user->display_name,
             $role_name
         );
+
+        if (!empty($capabilities)) {
+            $description .= ' ' . sprintf(
+                /* translators: 1: List of capabilities */
+                __('with capabilities: %1$s.', 'katari-user-role-editor'),
+                implode(', ', $capabilities)
+            );
+        } else {
+            $description .= '.';
+        }
         
-        $this->add_log( 'role_creation', $description );
+        $this->add_log('role_creation', $description);
     }
 
     /**
      * Log role deletion.
      *
      * @param string $role_name Role name.
+     * @param array  $capabilities Capabilities the role had.
      */
-    public function log_role_deletion( $role_name ) {
+    public function log_role_deletion( $role_name, $capabilities ) {
         $user = wp_get_current_user();
         $description = sprintf(
             /* translators: 1: User display name, 2: Role name */
-            __( 'User %1$s deleted role %2$s', 'katari-user-role-editor' ),
+            __('User %1$s deleted the role "%2$s"', 'katari-user-role-editor'),
             $user->display_name,
             $role_name
         );
+
+        if (!empty($capabilities)) {
+            $description .= ' ' . sprintf(
+                /* translators: 1: List of capabilities */
+                __('which had the following capabilities: %1$s.', 'katari-user-role-editor'),
+                implode(', ', $capabilities)
+            );
+        } else {
+            $description .= '.';
+        }
         
-        $this->add_log( 'role_deletion', $description );
+        $this->add_log('role_deletion', $description);
     }
 
     /**

@@ -286,8 +286,8 @@ class Katari_Capabilities_Manager {
             'delete_others_posts' => true,
             'delete_published_posts' => true,
             'delete_private_posts' => true,
-            'edit_private_posts' => true,
             'read_private_posts' => true,
+            'edit_private_posts' => true,
             'delete_private_pages' => true,
             'edit_private_pages' => true,
             'read_private_pages' => true
@@ -555,5 +555,33 @@ class Katari_Capabilities_Manager {
         );
 
         return isset($descriptions[$capability]) ? $descriptions[$capability] : __('No description available', 'katari-user-role-editor');
+    }
+
+    /**
+     * Toggle a capability for a role.
+     *
+     * @param string $role_name Role name.
+     * @param string $capability Capability name.
+     * @param bool   $granted Whether to grant or revoke the capability.
+     * @return bool|WP_Error True on success, WP_Error on failure.
+     */
+    public function toggle_capability($role_name, $capability, $granted) {
+        // Get the role
+        $role = get_role($role_name);
+        if (!$role) {
+            return new WP_Error('invalid_role', __('Invalid role.', 'katari-user-role-editor'));
+        }
+
+        // Toggle the capability
+        if ($granted) {
+            $role->add_cap($capability);
+        } else {
+            $role->remove_cap($capability);
+        }
+
+        // Trigger logging action
+        do_action('katari_capability_toggled', $role_name, $capability, $granted);
+
+        return true;
     }
 }

@@ -320,9 +320,11 @@ class Katari_Main {
             return;
         }
 
+        // Store old capabilities for logging
+        $old_caps = array_keys(array_filter($wp_role->capabilities));
+
         // Remove all existing capabilities
-        $existing_caps = $wp_role->capabilities;
-        foreach ( $existing_caps as $cap => $value ) {
+        foreach ( $old_caps as $cap ) {
             $wp_role->remove_cap( $cap );
         }
 
@@ -331,36 +333,43 @@ class Katari_Main {
             $wp_role->add_cap( $cap );
         }
 
-        do_action( 'katari_role_updated', $role, $capabilities );
+        // Trigger logging action with both old and new capabilities
+        do_action( 'katari_role_updated', $role, $capabilities, $old_caps );
     }
 
     /**
-     * Create new role.
+     * Create a new role.
      *
      * @param string $role_name Role name.
      * @param array  $capabilities Array of capabilities.
      */
-    private function create_role( $role_name, $capabilities ) {
-        $role_slug = sanitize_title( $role_name );
-        $capabilities = array_fill_keys( $capabilities, true );
+    private function create_role( $role_name, $capabilities = array() ) {
+        $role = add_role( sanitize_title( $role_name ), $role_name, array() );
         
-        $result = add_role( $role_slug, $role_name, $capabilities );
-        if ( $result ) {
+        if ( ! is_null( $role ) ) {
+            // Add capabilities one by one for proper tracking
+            foreach ( $capabilities as $cap ) {
+                $role->add_cap( $cap );
+            }
+            
+            // Trigger logging action with initial capabilities
             do_action( 'katari_role_created', $role_name, $capabilities );
         }
     }
 
     /**
-     * Delete role.
+     * Delete a role.
      *
      * @param string $role Role name.
      */
     private function delete_role( $role ) {
-        if ( $role === 'administrator' ) {
-            return;
-        }
-
-        do_action( 'katari_role_deleted', $role );
+        // Get role capabilities before deletion for logging
+        $role_obj = get_role( $role );
+        $capabilities = $role_obj ? array_keys(array_filter($role_obj->capabilities)) : array();
+        
+        // Trigger logging action with the role's capabilities
+        do_action( 'katari_role_deleted', $role, $capabilities );
+        
         remove_role( $role );
     }
 }
